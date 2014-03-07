@@ -1,13 +1,19 @@
 begintemplate NAccCell
 public init
 public soma, initseg, node, MYSA, FLUT, STIN
-create soma, initseg
+create soma, initseg, node[1], MYSA[1], FLUT[1], STIN[1]
 objref allNode, allMYSA, allFLUT, allSTIN, allAxon, allSecs
 objref DASyn1
 
+strdef filename
+objref fid
 
 proc init() { //$1 = previously generated cell number
-	topol($1)
+	sprint(filename, "axonpts/axon%d.txt",$1)	
+	fid = new File(filename)
+	fid.ropen()
+	
+	topol()
 	subsets()
 	model_globals()
 	dependent_var()
@@ -15,6 +21,118 @@ proc init() { //$1 = previously generated cell number
 	initaxon()	
 }
 
+
+strdef curline, seg
+objref strf
+proc topol() { //$1 = previously generated cell number
+	strf = new StringFunctions()
+	
+	axonnodes = fid.scanvar()
+	paranodes1 = fid.scanvar()
+	paranodes2 = fid.scanvar()
+	axoninter = fid.scanvar()
+	totalAxon = fid.scanvar()
+	
+	create soma
+	create initseg
+	create node[axonnodes], MYSA[paranodes1]
+	create FLUT[paranodes2], STIN[axoninter]
+		
+	//connect everything together
+	connect initseg(0), soma(1)
+	connect node[0](0), initseg(1)
+
+	for i=0, axonnodes-2 {
+		connect MYSA[2*i](0), node[i](1)
+		connect FLUT[2*i](0), MYSA[2*i](1)
+		connect STIN[3*i](0), FLUT[2*i](1)
+		connect STIN[3*i+1](0), STIN[3*i](1)
+		connect STIN[3*i+2](0), STIN[3*i+1](1)
+		connect FLUT[2*i+1](0), STIN[3*i+2](1)
+		connect MYSA[2*i+1](0), FLUT[2*i+1](1)
+		connect node[i+1](0), MYSA[2*i+1](1)	
+	}
+	
+	//Add 3d points for the axon sections
+	//move to the 3d points section
+	curline = ""
+	while(strcmp(curline,"//beginpoints\n") != 0) {fid.gets(curline)}
+	while(fid.gets(curline) != -1) {
+		//get the segment name and array index
+		segn = -1
+		sscanf(curline,"%s%d",seg,&segn)
+		strf.left(seg,4)
+		
+		//grab the two 3d points
+		x1 = y1 = z1 = d1 = x2 = y2 = z2 = d2 = 0 
+		fid.gets(curline)
+		sscanf(curline,"pt3dadd(%lf,%lf,%lf,%lf)",&x1,&y1,&z1,&d1)
+		fid.gets(curline)
+		sscanf(curline,"pt3dadd(%lf,%lf,%lf,%lf)",&x2,&y2,&z2,&d2)
+		
+		if (strcmp(seg,"soma") == 0) {
+			soma {
+				pt3dclear()
+				pt3dadd(x1,y1,z1,d1)
+				pt3dadd(x2,y2,z2,d2)
+			}
+		} else if (strcmp(seg,"init") == 0) {
+			initseg {
+				pt3dclear()
+				pt3dadd(x1,y1,z1,d1)
+				pt3dadd(x2,y2,z2,d2)
+			}
+		} else if (strcmp(seg,"node") == 0) {
+			node[segn] {
+				pt3dclear()
+				pt3dadd(x1,y1,z1,d1)
+				pt3dadd(x2,y2,z2,d2)
+			}
+		} else if (strcmp(seg,"MYSA") == 0) {
+			MYSA[segn] {
+				pt3dclear()
+				pt3dadd(x1,y1,z1,d1)
+				pt3dadd(x2,y2,z2,d2)
+			}
+		} else if (strcmp(seg,"FLUT") == 0) {
+			FLUT[segn] {
+				pt3dclear()
+				pt3dadd(x1,y1,z1,d1)
+				pt3dadd(x2,y2,z2,d2)
+			}
+		} else if (strcmp(seg,"STIN") == 0) {
+			STIN[segn] {
+				pt3dclear()
+				pt3dadd(x1,y1,z1,d1)
+				pt3dadd(x2,y2,z2,d2)
+			}
+		} else {
+			print "BAD SECTION"
+		}
+		
+		//skip two lines
+		fid.gets(curline)
+		fid.gets(curline)
+	}
+		
+	
+}
+
+proc subsets() {
+	allNode = new SectionList()
+	allMYSA = new SectionList()
+	allFLUT = new SectionList()
+	allSTIN = new SectionList()
+	allAxon = new SectionList()
+	allSecs = new SectionList()
+	
+	forsec "node" {allNode.append() allAxon.append()}
+	forsec "MYSA" {allMYSA.append() allAxon.append()}
+	forsec "FLUT" {allFLUT.append() allAxon.append()}
+	forsec "STIN" {allSTIN.append() allAxon.append()}
+	
+	forall allSecs.append()
+}
 
 proc model_globals(){
 	celsius = 36
@@ -72,44 +190,6 @@ proc dependent_var() {
 	Rpx = (rhoa*.01)/(PI*((((axonD/2)+space_i)^2)-((axonD/2)^2)))
 
 	interlength = (deltax-nodelength-(2*paralength1)-(2*paralength2))/6
-}
-
-proc topol() { //$1 = previously generated cell number
-	// create sections and load 3d pts of sections	
-	strdef filename
-	sprint(filename, "axonpts/axon%d.hoc",$1)	
-	xopen(filename)
-	
-	//connect everything together
-	// connect initseg(0), soma(1)
-	// connect node[0](0), initseg(1)
-
-	// for i=0, axonnodes-2 {
-		// connect MYSA[2*i](0), node[i](1)
-		// connect FLUT[2*i](0), MYSA[2*i](1)
-		// connect STIN[3*i](0), FLUT[2*i](1)
-		// connect STIN[3*i+1](0), STIN[3*i](1)
-		// connect STIN[3*i+2](0), STIN[3*i+1](1)
-		// connect FLUT[2*i+1](0), STIN[3*i+2](1)
-		// connect MYSA[2*i+1](0), FLUT[2*i+1](1)
-		// connect node[i+1](0), MYSA[2*i+1](1)	
-	// }
-}
-
-proc subsets() {
-	allNode = new SectionList()
-	allMYSA = new SectionList()
-	allFLUT = new SectionList()
-	allSTIN = new SectionList()
-	allAxon = new SectionList()
-	allSecs = new SectionList()
-	
-	forsec "node" {allNode.append() allAxon.append()}
-	forsec "MYSA" {allMYSA.append() allAxon.append()}
-	forsec "FLUT" {allFLUT.append() allAxon.append()}
-	forsec "STIN" {allSTIN.append() allAxon.append()}
-	
-	forall allSecs.append()
 }
 
 proc initsoma() {

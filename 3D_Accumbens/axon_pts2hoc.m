@@ -82,6 +82,7 @@ for i = 1:num_axons,
     fprintf(fid,'//****************\n');
     fprintf(fid,'//COMPARTMENT LIST\n');
     fprintf(fid,'//****************\n\n');
+    fprintf(fid,'//beginpoints\n')
 
     if nargin >= 2
         fprintf(fid,'soma{\n');
