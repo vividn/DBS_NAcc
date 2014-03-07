@@ -8,7 +8,7 @@ objref DASyn1
 strdef filename
 objref fid
 
-proc init() { //$1 = previously generated cell number
+proc init() { //cell number
 	sprint(filename, "axonpts/axon%d.txt",$1)	
 	fid = new File(filename)
 	fid.ropen()
@@ -307,5 +307,3 @@ proc initaxon() {
 }
 	
 endtemplate NAccCell
-objref asdf
-asdf = new NAccCell(2)
