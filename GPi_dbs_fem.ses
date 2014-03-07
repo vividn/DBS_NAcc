@@ -1,0 +1,203 @@
+{load_file("nrngui.hoc")}
+objectvar save_window_, rvp_
+objectvar scene_vector_[5]
+objectvar ocbox_, ocbox_list_, scene_, scene_list_
+{ocbox_list_ = new List()  scene_list_ = new List()}
+{pwman_place(0,0,0)}
+{
+xpanel("RunControl", 0)
+v_init = -60
+xvalue("Init","v_init", 1,"stdinit()", 1, 1 )
+xbutton("Init & Run","run()")
+xbutton("Stop","stoprun=1")
+runStopAt = 200
+xvalue("Continue til","runStopAt", 1,"{continuerun(runStopAt) stoprun=1}", 1, 1 )
+runStopIn = 1
+xvalue("Continue for","runStopIn", 1,"{continuerun(t + runStopIn) stoprun=1}", 1, 1 )
+xbutton("Single Step","steprun()")
+t = 200
+xvalue("t","t", 2 )
+tstop = 200
+xvalue("Tstop","tstop", 1,"tstop_changed()", 0, 1 )
+dt = 0.01
+xvalue("dt","dt", 1,"setdt()", 0, 1 )
+steps_per_ms = 50
+xvalue("Points plotted/ms","steps_per_ms", 1,"setdt()", 0, 1 )
+screen_update_invl = 0.05
+xvalue("Scrn update invl","screen_update_invl", 1,"", 0, 1 )
+realtime = 0
+xvalue("Real Time","realtime", 0,"", 0, 1 )
+xpanel(0,121)
+}
+
+
+{
+save_window_ = new Graph(0)
+save_window_.size(0,200,-80,50)
+scene_vector_[2] = save_window_
+{save_window_.view(0, -80, 200, 130, 390, 48, 816.3, 200.8)}
+graphList[0].append(save_window_)
+save_window_.save_name("graphList[0].")
+
+save_window_.addvar("soma[0].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+//save_window_.addvar("node[2].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+//save_window_.addvar("node[15].v( 0.5 )", 3, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[25].v( 0.5 )", 4, 1, 0.8, 0.9, 2)
+
+
+/*
+save_window_.addvar("dend[37].v( 0.5 )", 6, 1, 0.8, 0.9, 2)
+save_window_.addvar("dend[57].v( 0.5 )", 7, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[7].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[10].v( 0.5 )", 3, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[13].v( 0.5 )", 4, 1, 0.8, 0.9, 2)
+
+save_window_.addvar("dend[20].v( 0.5 )", 5, 1, 0.8, 0.9, 2)
+
+save_window_.addvar("node[0].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[1].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[2].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[3].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[4].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[5].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[6].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[7].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[8].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[9].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[10].v( 0.5 )", 3, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[11].v( 0.5 )", 3, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[12].v( 0.5 )", 3, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[13].v( 0.5 )", 3, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[14].v( 0.5 )", 3, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[15].v( 0.5 )", 4, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[16].v( 0.5 )", 4, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[17].v( 0.5 )", 4, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[18].v( 0.5 )", 4, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[19].v( 0.5 )", 4, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[20].v( 0.5 )", 5, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[21].v( 0.5 )", 5, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[22].v( 0.5 )", 5, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[23].v( 0.5 )", 5, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[24].v( 0.5 )", 5, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[25].v( 0.5 )", 6, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[26].v( 0.5 )", 6, 1, 0.8, 0.9, 2)
+
+
+save_window_.addvar("initseg[0].v( 0.5 )", 6, 1, 0.8, 0.9, 2)
+
+
+save_window_.addvar("soma[0].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("soma[1].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("soma[2].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("soma[3].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("soma[4].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("soma[5].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("soma[6].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("soma[7].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("soma[8].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("soma[9].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("soma[10].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("soma[11].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("soma[12].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("soma[13].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+
+save_window_.addvar("dend[0].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+save_window_.addvar("dend[5].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+save_window_.addvar("dend[10].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+save_window_.addvar("dend[15].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+save_window_.addvar("dend[20].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+save_window_.addvar("dend[25].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+save_window_.addvar("dend[30].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+save_window_.addvar("dend[35].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+save_window_.addvar("dend[40].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+save_window_.addvar("dend[45].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+save_window_.addvar("dend[50].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+save_window_.addvar("dend[55].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+
+
+save_window_.addvar("node[0].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[1].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[2].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[3].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("node[4].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+
+save_window_.addvar("node[26].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+
+save_window_.addvar("MYSA[0].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+save_window_.addvar("MYSA[1].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+save_window_.addvar("MYSA[2].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+save_window_.addvar("MYSA[3].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+save_window_.addvar("MYSA[4].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+save_window_.addvar("MYSA[5].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+save_window_.addvar("MYSA[6].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+save_window_.addvar("FLUT[0].v( 0.5 )", 3, 1, 0.8, 0.9, 2)
+save_window_.addvar("FLUT[1].v( 0.5 )", 3, 1, 0.8, 0.9, 2)
+save_window_.addvar("FLUT[2].v( 0.5 )", 3, 1, 0.8, 0.9, 2)
+save_window_.addvar("FLUT[3].v( 0.5 )", 3, 1, 0.8, 0.9, 2)
+save_window_.addvar("FLUT[4].v( 0.5 )", 3, 1, 0.8, 0.9, 2)
+save_window_.addvar("FLUT[5].v( 0.5 )", 3, 1, 0.8, 0.9, 2)
+save_window_.addvar("FLUT[6].v( 0.5 )", 3, 1, 0.8, 0.9, 2)
+save_window_.addvar("STIN[0].v( 0.5 )", 6, 1, 0.8, 0.9, 2)
+save_window_.addvar("STIN[1].v( 0.5 )", 6, 1, 0.8, 0.9, 2)
+save_window_.addvar("STIN[2].v( 0.5 )", 6, 1, 0.8, 0.9, 2)
+save_window_.addvar("STIN[3].v( 0.5 )", 6, 1, 0.8, 0.9, 2)
+save_window_.addvar("STIN[4].v( 0.5 )", 6, 1, 0.8, 0.9, 2)
+save_window_.addvar("STIN[5].v( 0.5 )", 6, 1, 0.8, 0.9, 2)
+save_window_.addvar("STIN[6].v( 0.5 )", 6, 1, 0.8, 0.9, 2)
+save_window_.addvar("STIN[7].v( 0.5 )", 6, 1, 0.8, 0.9, 2)
+save_window_.addvar("STIN[8].v( 0.5 )", 6, 1, 0.8, 0.9, 2)
+save_window_.addvar("STIN[9].v( 0.5 )", 6, 1, 0.8, 0.9, 2)
+save_window_.addvar("STIN[10].v( 0.5 )", 6, 1, 0.8, 0.9, 2)
+save_window_.addvar("STIN[11].v( 0.5 )", 6, 1, 0.8, 0.9, 2)
+
+save_window_.addexpr("AMPAstimpre_soma[0].v(0.5)", 3, 1, 0.8, 0.9, 2)
+save_window_.addexpr("GABAastimpre_soma[0].v(0.5)", 4, 1, 0.8, 0.9, 2)
+*/
+}
+/*
+{
+save_window_ = new Graph(0)
+save_window_.size(0,1000,-80,50)
+scene_vector_[3] = save_window_
+{save_window_.view(0, -80, 1000, 130, 384, 729, 825.3, 226)}
+graphList[0].append(save_window_)
+save_window_.save_name("graphList[1].")
+save_window_.addvar("AMPAstimpre_dend[0].v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("GABAastimpre_dend[0].v( 0.5 )", 2, 1, 0.8, 0.9, 2)
+save_window_.addvar("AMPAstimpre_soma[0].v( 0.5 )", 3, 1, 0.8, 0.9, 2)
+save_window_.addvar("GABAastimpre_soma[0].v( 0.5 )", 4, 1, 0.8, 0.9, 2)
+save_window_.addvar("AMPAstimpre_dend[0].vext( 0.5 )", 5, 1, 0.8, 0.9, 2)
+}
+{
+save_window_ = new Graph(0)
+save_window_.size(-10,700,0,1)
+scene_vector_[4] = save_window_
+{save_window_.view(0, -0.5, 1000, 2, 388, 387, 819, 200.8)}
+graphList[1].append(save_window_)
+save_window_.save_name("graphList[2].")
+save_window_.addexpr("synstimGABAa_soma[0].i", 3, 1, 0.8, 0.9, 2)
+save_window_.addexpr("synstimAMPA_soma[0].i", 1, 1, 0.8, 0.9, 2)
+save_window_.addexpr("synstimGABAa_dend[0].i", 5, 1, 0.8, 0.9, 2)
+save_window_.addexpr("synstimAMPA_dend[0].i", 6, 1, 0.8, 0.9, 2)
+save_window_.addexpr("exIClmp.i", 3, 1, 0.8, 0.9, 2)
+}
+{
+save_window_ = new Graph(0)
+save_window_.size(0,1000,-0.0045,0.0028)
+scene_vector_[4] = save_window_
+{save_window_.view(0, -0.0045, 250, 0.0073, 384, 729, 825.3, 226)}
+graphList[1].append(save_window_)
+save_window_.save_name("graphList[1].")
+save_window_.addvar("soma[0].iCaT_CaT( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("soma[0].iLCa_HVA( 0.5 )", 2, 1, 0.8, 0.9, 2)
+save_window_.addvar("soma[0].iNCa_HVA( 0.5 )", 3, 1, 0.8, 0.9, 2)
+save_window_.addvar("soma[0].i_membrane( 0.5 )", 4, 1, 0.8, 0.9, 2)
+save_window_.addvar("soma[0].ih_Ih( 0.5 )", 6, 1, 0.8, 0.9, 2)
+save_window_.addvar("soma[0].ik( 0.5 )", 7, 1, 0.8, 0.9, 2)
+save_window_.addvar("soma[0].ina( 0.5 )", 9, 1, 0.8, 0.9, 2)
+save_window_.addvar("soma[0].isKCa_sKCa( 0.5 )", 5, 1, 0.8, 0.9, 2)
+save_window_.addvar("soma[0].inaL_NaL( 0.5 )", 1, 1, 0.8, 0.9, 2)
+}
+*/
+objectvar scene_vector_[1]
+{doNotify()}

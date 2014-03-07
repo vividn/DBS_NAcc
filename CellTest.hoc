@@ -1,0 +1,54 @@
+load_file("nrngui.hoc")
+load_file("DBScell.hoc")
+
+objref ExpSyn1
+soma ExpSyn1 = new ExpSyn(0.5)
+ExpSyn1.tau = 3
+
+create Bkgd_NetStim
+objref bkgd
+Bkgd_NetStim bkgd = new NetStim(0.5)
+bkgd.interval = 3
+bkgd.number = 1e+09
+bkgd.noise = 0.15
+
+objref bkgdnc
+bkgdnc = new NetCon(bkgd,ExpSyn1)
+bkgdnc.weight = 1.05e-05
+bkgdnc.delay = 1
+
+
+create Stim_NetStim
+objref stim
+Stim_NetStim stim = new NetStim(0.5)
+stim.interval = 3
+stim.number = 1e+09
+stim.start = 400
+stim.noise = 0.15
+
+objref stimnc
+stimnc = new NetCon(stim,ExpSyn1)
+stimnc.weight = 2.4e-06
+stimnc.delay = 1
+
+
+objref data_soma
+data_soma = new Vector()
+data_soma.record(&soma.v(.5))
+
+tstop = 2000
+
+
+finitialize(v_init)
+fcurrent()
+
+//xopen("GPi_dbs_fem.ses") 
+
+init()
+run()
+
+/* objref f1
+f1 = new File()
+f1.wopen("C:/Students/ProfJohnson/JNP2011_GPi_modelsoma.dat")
+data_soma.printf(f1,"%f\t",0,t/dt-1)
+f1.close() */

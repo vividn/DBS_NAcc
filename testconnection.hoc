@@ -1,0 +1,11 @@
+load_file("nrngui.hoc")
+load_file("c_cell.hoc")
+
+objref mycell
+mycell = new C_Cell()
+create axon 
+mycell.soma connect axon(0) , 1
+
+if (1 != 0) {
+	printf("hi")
+}

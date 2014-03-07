@@ -1,0 +1,75 @@
+//GPi neuron - soma, axon, dendrites (Fig4 of Parent2001)
+//Matt Johnson (created 8/07, updated 5/08)
+//NEURON 6.1 (Windows version)
+//adapted from code by: Miocinovic2006 and Gillies2006
+
+load_file("nrngui.hoc")
+load_file("tappend.hoc")
+
+celsius = 36
+v_init = -86 //resting potential of downstate MSP (Nicola et al, 2000)
+
+
+
+objref s
+s = new List() //list of all compartments
+
+//----------------------------------------------------------------------------------------
+
+create soma
+create electrode
+access soma
+
+objref DASyn1
+
+proc initsoma() {
+	soma {
+		s.append( new SectionRef() )
+		Ra = 80
+		cm = 1
+		insert caL
+			Pbar_caL = 42
+		insert kir2
+			gbar_kir2 = 1.2
+		insert ksi
+			gbar_ksi = 0.45
+		insert leak
+			g_leak = 0.008
+			e_leak = -86
+		//insert hh
+		insert extracellular xraxial=1e+09 xg=1e+09 xc=0
+		
+		// Set up a dopamine synapse that properly interacts with mechanisms
+		
+		DASyn1 = new DAsyn(0.5) //from damsg.mod
+		for (x,0) {
+			setpointer mu_caL(x), DASyn1.msg
+		}
+		for (x,0) {
+			setpointer mu_kir2(x), DASyn1.msg
+		}
+		
+	}
+}
+
+electrode {
+	L = 1
+	d = 1
+}
+
+soma {
+	pt3dadd(-8515.159,5268.953,-1303.344,5.6419)
+	pt3dadd(-8508.4442,5265.0913,-1309.6684,5.6419)
+}
+
+//Make the axon
+load_file("createaxon.hoc")
+
+connect initseg[0](0), soma(1)
+
+//load all properties
+initsoma()
+initaxon()
+
+//add axon sectionrefs to s
+tappend(s,axonSections)

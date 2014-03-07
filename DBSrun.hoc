@@ -1,0 +1,222 @@
+//DBS of a GPi neuron (3D GPi dendrites, soma, axon)
+//Matt Johnson (June 2007)
+//NEURON 6.1 (Windows version)
+//adapted from code by: Miocinovic 2006 and Gillies 2006
+
+load_file("nrngui.hoc")
+load_file("DBScell.hoc")  //GPi cell geometry
+
+
+//-----------------------------------------------------------------------------------------------------------
+//  Load stimulation settings
+//-----------------------------------------------------------------------------------------------------------
+
+strdef waveform_filename  //stimulus waveform made with capacitive Femlab model and fourier_waveform.m
+strdef voltage_filename   //voltage file (voltages for each cell and each compartment) made with dbs_pop_coord2.m
+strdef output_file1, output_file2
+
+waveform_filename = "ffw_reconstr_bipo3c1a_encap250_136Hz_90us.txt" //waveform values
+voltage_filename = "CellVoltagesJustOne.txt"     //voltages from mphinterp (FEM)
+
+Vamp = 1    // edit: decide on applied voltage peak
+	
+//-----------------------------------------------------------------------------------------------------------
+//  Set up stimulation and simulation parameters
+//-----------------------------------------------------------------------------------------------------------
+
+//Extracellular stimulation parameters
+delay = 50		//ms  was 50 (145 for synapse testing)
+freq = 136 		//Hz
+polarity = -1 	//-1 for cathodic, +1 for anodic , -1 for bipolar
+num_test_pulses = 10
+dur = num_test_pulses*1000/freq  //ms
+
+//Simulation parameters
+dt = 0.01               //ms
+tstop = delay+dur+50  	//ms
+steps_per_ms = 100
+
+//Voltage parameters
+objref V_raw, Ve, V
+V_raw = new Vector(total,0)	//total number of compartments (comes from geometry file) 
+Ve = new Vector(total,0)
+V = new Vector(total,0)
+
+//Synapse input vector trains
+// objref VAMPAdend, VGABAadend, VAMPAsoma, VGABAasoma
+// objref VAMPAdende, VGABAadende, VAMPAsomae, VGABAasomae
+// VAMPAdend = new Vector(numAMPA_dend,0)
+// VGABAadend = new Vector(numGABAa_dend,0)
+// VAMPAsoma = new Vector(numAMPA_soma,0)
+// VGABAasoma = new Vector(numGABAa_soma,0)
+// VAMPAdende = new Vector(numAMPA_dend,0)
+// VGABAadende = new Vector(numGABAa_dend,0)
+// VAMPAsomae = new Vector(numAMPA_soma,0)
+// VGABAasomae = new Vector(numGABAa_soma,0)
+
+
+//-----------------------------------------------------------------------------------------------------------
+// Create an extracellular stimulus clamp
+//-----------------------------------------------------------------------------------------------------------
+
+objref exIClmp
+exIClmp = new IClamp()
+proc stimulus(){
+	
+	//extracellular stimulus
+	Vstim = Vamp * polarity
+	electrode {                 //electrode is created in morphology file 
+        exIClmp.loc(0.5)
+		exIClmp.del = 0         //was 0, onset delay, will use vectorplay 
+    	exIClmp.dur = 500000  	//was 1e6, duration, will use vectorplay 
+		exIClmp.amp = 0         //was 0, will use vectorplay to determine stimulus amplitude at any time point
+	}
+
+	for i=0,total-1 {
+		Ve.x[i]=Vstim*V.x[i]*1e3	//mV
+	}
+
+    // for i=0,numAMPA_dend-1 {
+        // VAMPAdende.x[i]=Vstim*VAMPAdend.x[i]*3e2
+    // }
+    // for i=0,numGABAa_dend-1 {
+        // VGABAadende.x[i]=Vstim*VGABAadend.x[i]*3e2
+    // }
+    // for i=0,numAMPA_soma-1 {
+        // VAMPAsomae.x[i]=Vstim*VAMPAsoma.x[i]*3e2
+    // }
+    // for i=0,numGABAa_soma-1 {
+        // VGABAasomae.x[i]=Vstim*VGABAasoma.x[i]*3e2
+    // }
+
+}
+stimulus()
+
+
+
+//-----------------------------------------------------------------------------------------------------------
+// Define a custom (fourier-derived) waveform for the extracellular stimulus
+//-----------------------------------------------------------------------------------------------------------
+
+objref extra_stim
+time_step = int(tstop/dt) + 1   
+extra_stim = new Vector(time_step,-1)  //RESIZE IF CHANGING TSTOP LATER
+
+//Load one cycle of fourier-derived waveform shape (normalized to 1V; dt=0.01); loads vector fdw
+objref fdw
+cycle_size = int(1000/(freq*dt)) + 1
+fdw = new Vector(cycle_size,0)   
+xopen(waveform_filename)
+
+//Calculate extra_stim values for each time-step and feed into exIClmp.amp
+proc calc_extra_stim(){ local tmp_del, tmp_dur, my_time, i, j
+
+    my_time = 0
+	if (freq == 0 || dur == 0 || Vamp == 0) {                   //no stimulation
+    	for i = 0, time_step-1 { 
+           	extra_stim.x[i] = 0
+        }
+    } else {
+        i = 0
+        while(my_time < delay && i < extra_stim.size()) {  		//before stimulus train
+           	extra_stim.x[i] = 0
+           	i = i + 1
+	      	my_time = my_time + dt      
+        }
+        while (my_time < delay+dur && i < extra_stim.size()) { 	//during stimulus train
+            for j = 0, cycle_size-1 {
+             	extra_stim.x[i] = fdw.x[j]   //extra_stim has no units
+             	i = i + 1
+                my_time = my_time + dt 
+            }        
+        }
+	  	while (i < extra_stim.size()) {     				//after stimulus train  
+            extra_stim.x[i] = 0
+            i = i + 1
+            my_time = my_time + dt         
+      	}	
+    }
+}
+calc_extra_stim()
+
+
+//Run trial
+func trial() {
+	Vamp = $1   //in volts
+    print "                 Trial voltage = ", Vamp*polarity, " V"
+    stimulus()
+	init() 
+	run()
+    if (response_to_stimulus() == 1) {
+        return 1
+    }
+    return 0
+}
+
+
+//-----------------------------------------------------------------------------------------------------------
+// Initialize the simulation
+//-----------------------------------------------------------------------------------------------------------
+
+proc advance() {
+
+	for i=0,total-1 {
+		s[i].sec.e_extracellular(0.5)=(exIClmp.i)*Ve.x[i]	//mV//
+	}
+
+	// for i=0,numAMPA_dend-1 {
+		// affAMPAdend[i].sec.e_extracellular(0.5)=(exIClmp.i)*VAMPAdende.x[i]	//mV//
+	// }
+	// for i=0,numGABAa_dend-1 {
+		// affGABAadend[i].sec.e_extracellular(0.5)=(exIClmp.i)*VGABAadende.x[i]	//mV//
+	// }
+	// for i=0,numAMPA_soma-1 {
+		// affAMPAsoma[i].sec.e_extracellular(0.5)=(exIClmp.i)*VAMPAsomae.x[i]     //mV//
+	// }
+	// for i=0,numGABAa_soma-1 {
+		// affGABAasoma[i].sec.e_extracellular(0.5)=(exIClmp.i)*VGABAasomae.x[i]	//mV//
+	// }
+
+	fadvance()
+}
+
+extra_stim.play(&exIClmp.amp, dt)
+
+finitialize(v_init)
+fcurrent()
+xopen("GPi_dbs_fem.ses")    
+//xopen("GPi_Fig4_synapseprops.ses")    
+
+//-----------------------------------------------------------------------------------------------------------
+// Load the extracellular voltage field data
+//-----------------------------------------------------------------------------------------------------------
+
+xopen(voltage_filename)  //load extracell. voltages from FEMLAB
+
+
+//-----------------------------------------------------------------------------------------------------------
+// Start the simulation
+//-----------------------------------------------------------------------------------------------------------
+
+if (dt != 0.01) {
+	print "dt is not 0.01!"
+}
+
+for kk = 0, total-1 {
+	V.x[kk] = V_raw.x[kk]
+}
+// for kk = 0, numAMPA_dend-1 {
+	// VAMPAdend.x[kk] = V_raw.x[kk]
+// }
+// for kk = 0, numGABAa_dend-1 {
+	// VGABAadend.x[kk] = V_raw.x[kk]
+// }
+// for kk = 0, numAMPA_soma-1 {
+	// VAMPAsoma.x[kk] = V_raw.x[kk]
+// }
+// for kk = 0, numGABAa_soma-1 {
+	// VGABAasoma.x[kk] = V_raw.x[kk]
+// }
+
+thresh_curr = -20
+

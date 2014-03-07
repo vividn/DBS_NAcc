@@ -1,0 +1,107 @@
+//Creates an axon to connect to other components
+//Nate Faber (created 02/14)
+//NEURON 7.3 (Windows)
+//adapted from code by: Matt Johnson
+//adapted from: Miocinovic2006 and Gillies2006
+
+// Axon parameters originally from a GPi neuron.
+//
+
+proc initaxon() {
+
+	for i=0,iselements-1 {
+		initseg[i] {
+			axonSections.append( new SectionRef() )
+			nseg = 1
+			Ra = 174 	//(Ohm-cm) from Hanson2004, Gillies 2005-->150.2, Mouchet2004-->200
+			cm = 1
+
+            //**************************************************************************
+            // Passive membrane properties
+            //**************************************************************************
+			insert myions   //dummy mechanism to set up ion concentrations for na and k		
+
+            //**************************************************************************
+            // Autonomous fast firing membrane properties
+            //**************************************************************************
+
+            insert Na                       //MODEL FOR NA+ CURRENT
+				gna_Na = my_gna_na          
+			insert NaL                      //MODEL FOR NA+ LEAK CURRENT
+				gna_NaL = my_gna_nal
+			insert Ih                       //MODEL FOR K+ INWARD RECTIFIER CURRENT
+                gh_Ih = my_gh_ih
+            insert KDRf                     //MODEL FOR FAST-DEACTIVATING K+ CURRENT (delayed rectifier)
+                gk_KDRf = my_gk_kdrf
+            insert KDRs                     //MODEL FOR SLOW-DEACTIVATING K+ CURRENT (delayed rectifier)
+                gk_KDRs = my_gk_kdrs
+            insert sKCa                     //MODEL FOR SMALL COND CA2+ ACTIVATED K+ CURRENT
+                gk_sKCa = my_gk_skca
+			insert cacum                    //MODEL FOR CA2+ ACCUMULATION
+                cai0_cacum = cai0_ca_ion
+			insert HVA                      //MODEL FOR HVA Ca2+ CURRENT
+                gcaL_HVA = my_gcal_hva
+                gcaN_HVA = my_gcan_hva
+
+			insert extracellular xraxial=1e+09 xg=1e+09 xc=0
+		}
+	}
+
+    for i=0,axonnodes-2 {
+		node[i]{
+			axonSections.append( new SectionRef() )
+			nseg = 1
+			Ra = rhoa/10000
+			cm = 2
+			insert axnode70
+			insert extracellular xraxial=Rpn0 xg=1e10 xc=0
+		}
+	}
+    node[axonnodes-1] { 
+		axonSections.append( new SectionRef() )
+		nseg = 1
+		Ra = rhoa/10000
+		cm = 2
+		insert pas
+			g_pas = 0.0001
+			e_pas = v_init 
+		insert extracellular xraxial=Rpn0 xg=1e10 xc=0
+	}
+	for i=0, paranodes1-1 {
+		MYSA[i]{
+			axonSections.append( new SectionRef() )
+			nseg = 1
+			Ra = rhoa/10000
+			cm = 2
+			insert pas
+				g_pas = 0.0001	
+				e_pas = v_init
+			insert extracellular xraxial=Rpn1 xg=mygm/(nl*2) xc=mycm/(nl*2)
+		}
+	}
+	for i=0, paranodes2-1 {
+		FLUT[i]{
+			axonSections.append( new SectionRef() )
+			nseg = 1
+			Ra = rhoa/10000
+			cm = 2
+			insert parak70
+			insert pas
+				g_pas = 0.0001		
+				e_pas = v_init
+			insert extracellular xraxial=Rpn2 xg=mygm/(nl*2) xc=mycm/(nl*2)
+		}
+	}
+	for i=0, axoninter-1 {
+		STIN[i]{
+			axonSections.append( new SectionRef() )
+			nseg = 1
+			Ra = rhoa/10000
+			cm = 2
+			insert pas
+				g_pas = 0.0001
+				e_pas = v_init
+			insert extracellular xraxial=Rpx xg=mygm/(nl*2) xc=mycm/(nl*2)
+		}
+	}
+}

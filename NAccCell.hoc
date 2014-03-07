@@ -1,0 +1,231 @@
+begintemplate NAccCell
+public init
+public soma, initseg, node, MYSA, FLUT, STIN
+create soma, initseg, node[1000], MYSA[1000], FLUT[1000], STIN[1000]
+objref allNode, allMYSA, allFLUT, allSTIN, allAxon, allSecs
+objref DASyn1
+
+
+proc init() { //$1 = previously generated cell number
+	topol($1)
+	subsets()
+	model_globals()
+	dependent_var()
+	initsoma()
+	initaxon()	
+}
+
+
+proc model_globals(){
+	celsius = 36
+	v_init = -86 //resting potential of downstate MSP (Nicola et al, 2000)
+
+	//morphological parameters of the soma
+	somaD = 10
+	
+    //morphological parameters of the axon
+	fiberD=2            //fiber diameter
+	nodelength = 1      //node length
+	paralength1 = 3     //MYSA length
+    paralength2 = 10    //FLUT length
+	space_p1 = 0.002  
+	space_p2 = 0.004
+	space_i = 0.004
+
+    //electrical parameters of the axon
+	rhoa = 0.7e6     // Ohm-um cytoplasmic resistance (was 0.7e6), 1.74e6 Hanson
+	mycm = 0.1       // uF/cm2 lamella membrane capacitance (was 0.1)
+	mygm = 0.001     // S/cm2 lamella membrane conductance (was 0.001)
+	
+	//Intracell. ion concentrations are typical mammalian values (from Johnston & Wu, 1999 via NEUORN tutorial)
+	cai0_ca_ion = 1e-4
+	ki0_k_ion = 140
+	nai0_na_ion = 10
+
+	//Extracell. ion concentrations taken from Nakanishi 1990 (slice bathing solution)
+	cao0_ca_ion = 2.4
+	ko0_k_ion = 6.24
+	nao0_na_ion = 150
+
+	//parameters (mho/cm2)
+
+    my_gna_na = 0.02            //Fit according to AP height (0.02)
+	my_gna_nal = 2.8e-5         //was 1.8e-5 for in vitro testing
+
+    my_gh_ih = 0.0002           //Nakanishi1990-Fig1A (0.0002)
+
+	my_gk_kdrf = 0.0040         //Kv3.1 (0.0040)
+	my_gk_kdrs = 0.0010         //Kv2.1 (0.0010)
+    my_gk_skca = 0.00001        //(0.00001)
+
+	my_gcal_hva = 0.0005        //Nakanishi1990-Fig2 (0.0005)
+	my_gcan_hva = 0.0020        //Nakanishi1990-Fig2 (0.0020)
+}
+
+proc dependent_var() {
+	if (fiberD==1) {axonD=0.8 nodeD=0.7 paraD1=0.7 paraD2=0.8 deltax=200 nl=20}
+	if (fiberD==2) {axonD=1.6 nodeD=1.4 paraD1=1.4 paraD2=1.6 deltax=200 nl=30}
+
+	Rpn0 = (rhoa*.01)/(PI*((((nodeD/2)+space_p1)^2)-((nodeD/2)^2)))
+	Rpn1 = (rhoa*.01)/(PI*((((paraD1/2)+space_p1)^2)-((paraD1/2)^2)))
+	Rpn2 = (rhoa*.01)/(PI*((((paraD2/2)+space_p2)^2)-((paraD2/2)^2)))
+	Rpx = (rhoa*.01)/(PI*((((axonD/2)+space_i)^2)-((axonD/2)^2)))
+
+	interlength = (deltax-nodelength-(2*paralength1)-(2*paralength2))/6
+}
+
+proc topol() { //$1 = previously generated cell number
+	// create sections and load 3d pts of sections	
+	strdef filename
+	sprint(filename, "axonpts/axon%d.hoc",$1)	
+	xopen(filename)
+	
+	//connect everything together
+	connect initseg(0), soma(1)
+	connect node[0](0), initseg(1)
+
+	for i=0, axonnodes-2 {
+		connect MYSA[2*i](0), node[i](1)
+		connect FLUT[2*i](0), MYSA[2*i](1)
+		connect STIN[3*i](0), FLUT[2*i](1)
+		connect STIN[3*i+1](0), STIN[3*i](1)
+		connect STIN[3*i+2](0), STIN[3*i+1](1)
+		connect FLUT[2*i+1](0), STIN[3*i+2](1)
+		connect MYSA[2*i+1](0), FLUT[2*i+1](1)
+		connect node[i+1](0), MYSA[2*i+1](1)	
+	}
+}
+
+proc subsets() {
+	allNode = new SectionList()
+	allMYSA = new SectionList()
+	allFLUT = new SectionList()
+	allSTIN = new SectionList()
+	allAxon = new SectionList()
+	allSecs = new SectionList()
+	
+	forsec "node" {allNode.append() allAxon.append()}
+	forsec "MYSA" {allMYSA.append() allAxon.append()}
+	forsec "FLUT" {allFLUT.append() allAxon.append()}
+	forsec "STIN" {allSTIN.append() allAxon.append()}
+	
+	forall allSecs.append()
+}
+
+proc initsoma() {
+	soma {
+		//Change diameter
+		pt3dchange(0,somaD)
+		pt3dchange(1,somaD)
+		
+		Ra = 80
+		cm = 1
+		insert caL
+			Pbar_caL = 42
+		insert kir2
+			gbar_kir2 = 1.2
+		insert ksi
+			gbar_ksi = 0.45
+		insert leak
+			g_leak = 0.008
+			e_leak = -86
+		//insert hh
+		insert extracellular xraxial=1e+09 xg=1e+09 xc=0
+		
+		// Set up a dopamine synapse that properly interacts with mechanisms
+		
+		DASyn1 = new DAsyn(0.5) //from damsg.mod
+		for (x,0) {
+			setpointer mu_caL(x), DASyn1.msg
+		}
+		for (x,0) {
+			setpointer mu_kir2(x), DASyn1.msg
+		}
+		
+	}
+}
+
+proc initaxon() {
+	initseg {
+		//Change diameter
+		pt3dchange(0,somaD)
+		pt3dchange(1,nodeD)
+		
+		nseg = 1
+		Ra = 174 	//(Ohm-cm) from Hanson2004, Gillies 2005-->150.2, Mouchet2004-->200
+		cm = 1
+
+		//**************************************************************************
+		// Passive membrane properties
+		//**************************************************************************
+		insert myions   //dummy mechanism to set up ion concentrations for na and k		
+
+		//**************************************************************************
+		// Autonomous fast firing membrane properties
+		//**************************************************************************
+
+		insert Na                       //MODEL FOR NA+ CURRENT
+			gna_Na = my_gna_na          
+		insert NaL                      //MODEL FOR NA+ LEAK CURRENT
+			gna_NaL = my_gna_nal
+		insert Ih                       //MODEL FOR K+ INWARD RECTIFIER CURRENT
+			gh_Ih = my_gh_ih
+		insert KDRf                     //MODEL FOR FAST-DEACTIVATING K+ CURRENT (delayed rectifier)
+			gk_KDRf = my_gk_kdrf
+		insert KDRs                     //MODEL FOR SLOW-DEACTIVATING K+ CURRENT (delayed rectifier)
+			gk_KDRs = my_gk_kdrs
+		insert sKCa                     //MODEL FOR SMALL COND CA2+ ACTIVATED K+ CURRENT
+			gk_sKCa = my_gk_skca
+		insert cacum                    //MODEL FOR CA2+ ACCUMULATION
+			cai0_cacum = cai0_ca_ion
+		insert HVA                      //MODEL FOR HVA Ca2+ CURRENT
+			gcaL_HVA = my_gcal_hva
+			gcaN_HVA = my_gcan_hva
+
+			insert extracellular xraxial=1e+09 xg=1e+09 xc=0
+	}
+	
+	forsec allAxon{
+		nseg = 1
+		Ra = rhoa/10000
+		cm = 2
+	}
+	
+	forsec allNode {
+		insert axnode70
+		insert extracellular xraxial=Rpn0 xg=1e10 xc=0
+	}
+    node[axonnodes-1] { //Last node has some differences to avoid edge effects 
+		uninsert axnode70
+		insert pas
+			g_pas = 0.0001
+			e_pas = v_init 
+	}
+	
+	forsec allMYSA {
+		insert pas
+			g_pas = 0.0001
+			e_pas = v_init
+		insert extracellular xraxial=Rpn1 xg=mygm/(nl*2) xc=mycm/(nl*2)
+	}
+	
+	forsec allFLUT {
+		insert parak70
+		insert pas
+			g_pas = 0.0001		
+			e_pas = v_init
+		insert extracellular xraxial=Rpn2 xg=mygm/(nl*2) xc=mycm/(nl*2)
+	}
+	
+	forsec allSTIN {
+		insert pas
+			g_pas = 0.0001
+			e_pas = v_init
+		insert extracellular xraxial=Rpx xg=mygm/(nl*2) xc=mycm/(nl*2)
+		
+	}
+}
+	
+endtemplate NAccCell
+objref asdf
+asdf = new NAccCell(2)

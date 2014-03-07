@@ -1,0 +1,17 @@
+//Generates an nx3 matrix of the positions of the segments made by DBScell.hoc
+load_file("DBScell.hoc")
+
+objref cellposfile
+cellposfile = new File()
+cellposfile.wopen("section_coordinates.txt")
+
+define_shape() //corrects all relative positioning to the root (soma)
+n = s.count() //total number of sections
+
+for i=0,n-1 {
+	s.o(i).sec { //opens each section of the neuron
+		cellposfile.printf("%f\t%f\t%f\n",x3d(0.5),y3d(0.5),z3d(0.5))
+	}
+}
+
+cellposfile.close()
