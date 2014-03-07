@@ -1,7 +1,7 @@
 begintemplate NAccCell
 public init
 public soma, initseg, node, MYSA, FLUT, STIN
-create soma, initseg, node[1000], MYSA[1000], FLUT[1000], STIN[1000]
+create soma, initseg
 objref allNode, allMYSA, allFLUT, allSTIN, allAxon, allSecs
 objref DASyn1
 
@@ -81,19 +81,19 @@ proc topol() { //$1 = previously generated cell number
 	xopen(filename)
 	
 	//connect everything together
-	connect initseg(0), soma(1)
-	connect node[0](0), initseg(1)
+	// connect initseg(0), soma(1)
+	// connect node[0](0), initseg(1)
 
-	for i=0, axonnodes-2 {
-		connect MYSA[2*i](0), node[i](1)
-		connect FLUT[2*i](0), MYSA[2*i](1)
-		connect STIN[3*i](0), FLUT[2*i](1)
-		connect STIN[3*i+1](0), STIN[3*i](1)
-		connect STIN[3*i+2](0), STIN[3*i+1](1)
-		connect FLUT[2*i+1](0), STIN[3*i+2](1)
-		connect MYSA[2*i+1](0), FLUT[2*i+1](1)
-		connect node[i+1](0), MYSA[2*i+1](1)	
-	}
+	// for i=0, axonnodes-2 {
+		// connect MYSA[2*i](0), node[i](1)
+		// connect FLUT[2*i](0), MYSA[2*i](1)
+		// connect STIN[3*i](0), FLUT[2*i](1)
+		// connect STIN[3*i+1](0), STIN[3*i](1)
+		// connect STIN[3*i+2](0), STIN[3*i+1](1)
+		// connect FLUT[2*i+1](0), STIN[3*i+2](1)
+		// connect MYSA[2*i+1](0), FLUT[2*i+1](1)
+		// connect node[i+1](0), MYSA[2*i+1](1)	
+	// }
 }
 
 proc subsets() {
