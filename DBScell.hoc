@@ -16,7 +16,6 @@ s = new List() //list of all compartments
 
 //----------------------------------------------------------------------------------------
 
-create soma
 create electrode
 access soma
 
@@ -55,11 +54,6 @@ proc initsoma() {
 electrode {
 	L = 1
 	d = 1
-}
-
-soma {
-	pt3dadd(-8515.159,5268.953,-1303.344,5.6419)
-	pt3dadd(-8508.4442,5265.0913,-1309.6684,5.6419)
 }
 
 //Make the axon

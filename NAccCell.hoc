@@ -2,6 +2,7 @@ begintemplate NAccCell
 public init
 public soma, initseg, node, MYSA, FLUT, STIN
 create soma, initseg, node[1], MYSA[1], FLUT[1], STIN[1]
+public allNode, allMYSA, allFLUT, allSTIN, allAxon, allSecs
 objref allNode, allMYSA, allFLUT, allSTIN, allAxon, allSecs
 objref DASyn1
 
@@ -60,8 +61,9 @@ proc topol() { //$1 = previously generated cell number
 	while(fid.gets(curline) != -1) {
 		//get the segment name and array index
 		segn = -1
-		sscanf(curline,"%s%d",seg,&segn)
+		sscanf(curline,"%[^[][%d]",seg,&segn)
 		strf.left(seg,4)
+		print segn
 		
 		//grab the two 3d points
 		x1 = y1 = z1 = d1 = x2 = y2 = z2 = d2 = 0 
@@ -272,6 +274,8 @@ proc initaxon() {
 	}
 	
 	forsec allNode {
+		pt3dchange(0,nodeD)
+		pt3dchange(1,nodeD)
 		insert axnode70
 		insert extracellular xraxial=Rpn0 xg=1e10 xc=0
 	}
@@ -283,6 +287,8 @@ proc initaxon() {
 	}
 	
 	forsec allMYSA {
+		pt3dchange(0,paraD1)
+		pt3dchange(1,paraD1)
 		insert pas
 			g_pas = 0.0001
 			e_pas = v_init
@@ -290,6 +296,8 @@ proc initaxon() {
 	}
 	
 	forsec allFLUT {
+		pt3dchange(0,paraD2)
+		pt3dchange(1,paraD2)
 		insert parak70
 		insert pas
 			g_pas = 0.0001		
@@ -298,6 +306,8 @@ proc initaxon() {
 	}
 	
 	forsec allSTIN {
+		pt3dchange(0,axonD)
+		pt3dchange(1,axonD)
 		insert pas
 			g_pas = 0.0001
 			e_pas = v_init
@@ -307,3 +317,5 @@ proc initaxon() {
 }
 	
 endtemplate NAccCell
+objref cell1
+cell1 = new NAccCell(1)
