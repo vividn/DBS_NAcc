@@ -1,4 +1,4 @@
 *.c
 *.o
 *.asv
-axonpts/*.txt
+axonpts/**

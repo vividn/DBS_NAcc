@@ -5,10 +5,10 @@ close all;
 clear all;
 warning('off','MATLAB:singularMatrix')
 
-nNeurons = 20;
+nNeurons = 200;
 somaLength = 0.02; %in mm
 % Final number of points in each axon contour
-ptsPerAxon = 1000;
+ptsPerAxon = 100;
 
 Acc = importdata('AccMesh.raw');
 Acc = Acc.data;

@@ -6,10 +6,17 @@ public allNode, allMYSA, allFLUT, allSTIN, allAxon, allSecs
 objref allNode, allMYSA, allFLUT, allSTIN, allAxon, allSecs
 objref DASyn1
 
+//The definitive List (not SectionList) containing SectionRef's for each section
+public s
+objref s
+
 strdef filename
 objref fid
 
-proc init() { //cell number
+strdef curline, seg //for reading the file and keeping track of section
+objref strf //string functions 
+
+proc init() { //$1 = cell number
 	sprint(filename, "axonpts/axon%d.txt",$1)	
 	fid = new File(filename)
 	fid.ropen()
@@ -23,10 +30,10 @@ proc init() { //cell number
 }
 
 
-strdef curline, seg
-objref strf
-proc topol() { //$1 = previously generated cell number
+
+proc topol() {
 	strf = new StringFunctions()
+	s = new List()
 	
 	axonnodes = fid.scanvar()
 	paranodes1 = fid.scanvar()
@@ -63,7 +70,6 @@ proc topol() { //$1 = previously generated cell number
 		segn = -1
 		sscanf(curline,"%[^[][%d]",seg,&segn)
 		strf.left(seg,4)
-		print segn
 		
 		//grab the two 3d points
 		x1 = y1 = z1 = d1 = x2 = y2 = z2 = d2 = 0 
@@ -77,36 +83,42 @@ proc topol() { //$1 = previously generated cell number
 				pt3dclear()
 				pt3dadd(x1,y1,z1,d1)
 				pt3dadd(x2,y2,z2,d2)
+				s.append(new SectionRef())
 			}
 		} else if (strcmp(seg,"init") == 0) {
 			initseg {
 				pt3dclear()
 				pt3dadd(x1,y1,z1,d1)
 				pt3dadd(x2,y2,z2,d2)
+				s.append(new SectionRef())
 			}
 		} else if (strcmp(seg,"node") == 0) {
 			node[segn] {
 				pt3dclear()
 				pt3dadd(x1,y1,z1,d1)
 				pt3dadd(x2,y2,z2,d2)
+				s.append(new SectionRef())
 			}
 		} else if (strcmp(seg,"MYSA") == 0) {
 			MYSA[segn] {
 				pt3dclear()
 				pt3dadd(x1,y1,z1,d1)
 				pt3dadd(x2,y2,z2,d2)
+				s.append(new SectionRef())
 			}
 		} else if (strcmp(seg,"FLUT") == 0) {
 			FLUT[segn] {
 				pt3dclear()
 				pt3dadd(x1,y1,z1,d1)
 				pt3dadd(x2,y2,z2,d2)
+				s.append(new SectionRef())
 			}
 		} else if (strcmp(seg,"STIN") == 0) {
 			STIN[segn] {
 				pt3dclear()
 				pt3dadd(x1,y1,z1,d1)
 				pt3dadd(x2,y2,z2,d2)
+				s.append(new SectionRef())
 			}
 		} else {
 			print "BAD SECTION"
@@ -317,5 +329,3 @@ proc initaxon() {
 }
 	
 endtemplate NAccCell
-objref cell1
-cell1 = new NAccCell(1)
