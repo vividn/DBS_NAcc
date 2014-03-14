@@ -223,7 +223,7 @@ proc initsoma() {
 		insert leak
 			g_leak = 0.008
 			e_leak = -86
-		//insert hh
+
 		insert extracellular xraxial=1e+09 xg=1e+09 xc=0
 		
 		// Set up a dopamine synapse that properly interacts with mechanisms
@@ -249,34 +249,19 @@ proc initaxon() {
 		Ra = 174 	//(Ohm-cm) from Hanson2004, Gillies 2005-->150.2, Mouchet2004-->200
 		cm = 1
 
-		//**************************************************************************
-		// Passive membrane properties
-		//**************************************************************************
-		insert myions   //dummy mechanism to set up ion concentrations for na and k		
+		Ra = 80
+		cm = 1
+		insert caL
+			Pbar_caL = 42
+		insert kir2
+			gbar_kir2 = 1.2
+		insert ksi
+			gbar_ksi = 0.45
+		insert leak
+			g_leak = 0.008
+			e_leak = -86
 
-		//**************************************************************************
-		// Autonomous fast firing membrane properties
-		//**************************************************************************
-
-		insert Na                       //MODEL FOR NA+ CURRENT
-			gna_Na = my_gna_na          
-		insert NaL                      //MODEL FOR NA+ LEAK CURRENT
-			gna_NaL = my_gna_nal
-		insert Ih                       //MODEL FOR K+ INWARD RECTIFIER CURRENT
-			gh_Ih = my_gh_ih
-		insert KDRf                     //MODEL FOR FAST-DEACTIVATING K+ CURRENT (delayed rectifier)
-			gk_KDRf = my_gk_kdrf
-		insert KDRs                     //MODEL FOR SLOW-DEACTIVATING K+ CURRENT (delayed rectifier)
-			gk_KDRs = my_gk_kdrs
-		insert sKCa                     //MODEL FOR SMALL COND CA2+ ACTIVATED K+ CURRENT
-			gk_sKCa = my_gk_skca
-		insert cacum                    //MODEL FOR CA2+ ACCUMULATION
-			cai0_cacum = cai0_ca_ion
-		insert HVA                      //MODEL FOR HVA Ca2+ CURRENT
-			gcaL_HVA = my_gcal_hva
-			gcaN_HVA = my_gcan_hva
-
-			insert extracellular xraxial=1e+09 xg=1e+09 xc=0
+		insert extracellular xraxial=1e+09 xg=1e+09 xc=0
 	}
 	
 	forsec allAxon{
