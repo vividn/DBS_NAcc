@@ -59,9 +59,7 @@ for iNeuron = 1:nNeurons,
     end
     if nargin >= 3
         nDends = size(DendStructs,1);
-        for iDend = 1:nDends
-            fprintf(fid,'create dend%d, dend%d_1[3], dend%d_2[3]\n',iDend,iDend,iDend);
-        end
+        fprintf(fid,'create proxdend[%d], middend[%d], distdend[%d]\n',iDend,iDend*2,iDend*2*2);
     end
     fprintf(fid,'create node[axonnodes], MYSA[paranodes1]\n');
     fprintf(fid,'create FLUT[paranodes2], STIN[axoninter]\n\n');    
@@ -83,17 +81,20 @@ for iNeuron = 1:nNeurons,
 		'connect node[i+1](0), MYSA[2*i+1](1)\n',...
         '}\n\n']);
     if nargin >= 3
-        for iDend = 1:nDends
-            if iDend/nDends <= 0.5
+        for iDend = 0:nDends-1
+            if (iDend+1)/nDends <= 0.5
                 somaSide = 1;
             else
                 somaSide = 0;
             end
-            fprintf(fid,'connect dend%d(0), soma(%d)\n',iDend,somaSide);
-            fprintf(fid,'connect dend%d_1(0), dend%d(1)\n',iDend,iDend);
-            fprintf(fid,'for i = 1, 2 connect dend%d_1[i](0), dend%d_1(1)\n',iDend,iDend);
-            fprintf(fid,'connect dend%d_2(0), dend%d(1)\n',iDend,iDend);
-            fprintf(fid,'for i = 1, 2 connect dend%d_2[i](0), dend%d_2(1)\n\n',iDend,iDend);
+            fprintf(fid,'connect proxdend[%d], soma(%d)\n',iDend,somaSide);
+            fprintf(fid,'connect middend[%d](0), proxdend[%d](1)\n',iDend*2,iDend);
+            fprintf(fid,'connect middend[%d](0), proxdend[%d](1)\n',iDend*2+1,iDend);
+            fprintf(fid,'connect distdend[%d](0), middend[%d](1)\n',iDend*4,iDend*2);
+            fprintf(fid,'connect distdend[%d](0), middend[%d](1)\n',iDend*4+1,iDend*2);
+            fprintf(fid,'connect distdend[%d](0), middend[%d](1)\n',iDend*4+2,iDend*2+1);
+            fprintf(fid,'connect distdend[%d](0), middend[%d](1)\n',iDend*4+3,iDend*2+);
+            fprintf(fid,'\n');
         end
     end
     
@@ -115,8 +116,36 @@ for iNeuron = 1:nNeurons,
     end
     
     if nargin >= 3
-        for iDend = 1:nDends
-            writeDends(fid,DendStructs{iDend,iNeuron},iDend);
+        for iDend = 0:nDends-1
+            pDend = DendStructs{iDend+1,nNeurons};
+            fprintf(fid,'proxdend[%d]{\n',iDend);
+            pos1 = pDend.startPoint*1e3;
+            pos2 = pDend.endPoint*1e3;
+            fprintf(fid,'pt3dadd(%f,%f,%f,0)\n',pos1(1),pos1(2),pos1(3));
+            fprintf(fid,'pt3dadd(%f,%f,%f,0)\n',pos2(1),pos2(2),pos2(3));
+            fprintf(fid,'}\n\n');
+            
+            for iMid = 0:1
+                if iMid == 0, mDend = pDend.child1, end
+                if iMid == 1, mDend = pDend.child2, end
+                fprintf(fid,'middend[%d]{\n',iDend*2+iMid);
+                pos1 = mDend.startPoint*1e3;
+                pos2 = mDend.endPoint*1e3;
+                fprintf(fid,'pt3dadd(%f,%f,%f,0)\n',pos1(1),pos1(2),pos1(3));
+                fprintf(fid,'pt3dadd(%f,%f,%f,0)\n',pos2(1),pos2(2),pos2(3));
+                fprintf(fid,'}\n\n');
+                
+                for iDist = 0:1
+                    if iDist == 0, dDend = mDend.child1, end
+                    if iDist == 1, dDend = mDend.child2, end
+                    fprintf(fid,'distdend[%d]{\n',iDend*4+iMid*2+iDist);
+                    pos1 = dDend.startPoint*1e3;
+                    pos2 = dDend.endPoint*1e3;
+                    fprintf(fid,'pt3dadd(%f,%f,%f,0)\n',pos1(1),pos1(2),pos1(3));
+                    fprintf(fid,'pt3dadd(%f,%f,%f,0)\n',pos2(1),pos2(2),pos2(3));
+                    fprintf(fid,'}\n\n');
+                end
+            end
         end
     end
 
@@ -238,29 +267,3 @@ function [seg] = axonpointparse(tempseg)
     end
 
 end  % function end
-
-function writeDends(fid,DendStruct,iDend,formatStr)
-if nargin < 4
-    formatStr = '%d';
-end
-formatSpec = ['dend' formatStr '{\n'];
-fprintf(fid,formatSpec,iDend);
-pos1 = DendStruct.startPoint*1e3;
-pos2 = DendStruct.endPoint*1e3;
-fprintf(fid,'pt3dadd(%f,%f,%f,0)\n',pos1(1),pos1(2),pos1(3));
-fprintf(fid,'pt3dadd(%f,%f,%f,0)\n',pos2(1),pos2(2),pos2(3));
-fprintf(fid,'}\n\n');
-
-switch formatStr
-    case '%d'
-        writeDends(fid,DendStruct.child1,iDend,[formatStr '_1']);
-        writeDends(fid,DendStruct.child2,iDend,[formatStr '_2']);
-    case {'%d_1','%d_2'}
-        writeDends(fid,DendStruct.child1,iDend,[formatStr '[1]']);
-        writeDends(fid,DendStruct.child2,iDend,[formatStr '[2]']);
-    case {'%d_1[1]','%d_1[2]','%d_2[1]','%d_2[2]'}
-    otherwise
-        error('bad formatSpec = ''%s''',formatStr);
-end
-
-end
