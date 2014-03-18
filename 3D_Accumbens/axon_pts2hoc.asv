@@ -1,4 +1,4 @@
-function [neuron] = axon_pts2hoc(axonpts,somapts)
+function [neuron] = axon_pts2hoc(axonpts,somapts,DendStructs)
 
 % axon_pts2hoc()
 %
@@ -15,18 +15,18 @@ function [neuron] = axon_pts2hoc(axonpts,somapts)
 % and adds 3d points for the soma, and connects it to the initialsegment
 
 h = waitbar(0,'Please wait...');
-num_axons = size(axonpts,3);
+nNeurons = size(axonpts,3);
 
 % cd ML_hocpoints;
 
 % Parse through axonal tree creating pre-defined segment lengths
 figure; hold on;
-for i = 1:num_axons,
+for iNeuron = 1:nNeurons,
 
-    waitbar(i/num_axons,h,['Parsing fiber: ',num2str(i)]);
+    waitbar(iNeuron/nNeurons,h,['Parsing fiber: ',num2str(iNeuron)]);
     
-    neuron(i).axonseg = axonpointparse(squeeze(axonpts(:,:,i))*1e3);
-    axonseg = neuron(i).axonseg;
+    neuron(iNeuron).axonseg = axonpointparse(squeeze(axonpts(:,:,iNeuron))*1e3);
+    axonseg = neuron(iNeuron).axonseg;
     
     % Calculate numbers for header file
     lastnode = find(axonseg(:,7)==1,1,'last');
@@ -46,7 +46,7 @@ for i = 1:num_axons,
     total = axonnodes + paranodes1 + paranodes2 + axoninter;
     
     % Write the header files
-    fid = fopen(['..\axonpts\axon',num2str(i),'.txt'],'w');
+    fid = fopen(['..\axonpts\axon',num2str(iNeuron),'.txt'],'w');
     fprintf(fid,'axonnodes = %d\n',axonnodes);
     fprintf(fid,'paranodes1 = %d\n',paranodes1);
     fprintf(fid,'paranodes2 = %d\n',paranodes2);
@@ -56,20 +56,54 @@ for i = 1:num_axons,
     % Write the create statements
     if nargin >= 2
         fprintf(fid,'create soma\n');
-    end    
-    fprintf(fid,'create initseg\n');
+    end
+    if nargin >= 3
+        nDends = size(DendStructs,1);
+        for iDend = 1:nDends
+            fprintf(fid,'create dend%d, dend%1_1[3], dend%1_2[3]\n',iDend,iDend,iDend)
+        end
+    end
     fprintf(fid,'create node[axonnodes], MYSA[paranodes1]\n');
-    fprintf(fid,'create FLUT[paranodes2], STIN[axoninter]\n\n');
+    fprintf(fid,'create FLUT[paranodes2], STIN[axoninter]\n\n');    
     
-    % Create section lists of multiparts
-    fprintf(fid,'objref allnode, allMYSA, allFLUT, allSTIN');
-    fprintf(
+    % Connection statements
+    fprintf(fid,'//connect everything together\n')
+    if nargin >= 2
+        fprintf(fid,'connect node[0](0), soma(1)\n\n')
+    end
+    fprintf(fid,[...
+        'for i=0, axonnodes-2 {\n',...
+        'connect MYSA[2*i](0), node[i](1)\n',...
+		'connect FLUT[2*i](0), MYSA[2*i](1)\n',...
+		'connect STIN[3*i](0), FLUT[2*i](1)\n',...
+		'connect STIN[3*i+1](0), STIN[3*i](1)\n',...
+		'connect STIN[3*i+2](0), STIN[3*i+1](1)\n',...
+		'connect FLUT[2*i+1](0), STIN[3*i+2](1)\n',...
+		'connect MYSA[2*i+1](0), FLUT[2*i+1](1)\n',...
+		'connect node[i+1](0), MYSA[2*i+1](1)\n',...
+        '}\n\n']);
+    if nargin >= 3
+        for iDend = 1:nDends
+            if iDend/nDends <= 0.5
+                somaSide = 1;
+            else
+                somaSide = 0;
+            end
+            fprintf(fid,'connect dend%d(0), soma(%d)\n',iDend,somaSide);
+            fprintf(fid,'connect dend%d_1(0), dend%d(1)\n',iDend,iDend);
+            fprintf(fid,'for i = 1, 2 connect dend%d_1[i](0), dend%d_1(1)\n',iDend,iDend);
+            fprintf(fid,'connect dend%d_2(0), dend%d(1)\n',iDend,iDend);
+            fprintf(fid,'for i = 1, 2 connect dend%d_2[i](0), dend%d_2(1)\n\n',iDend,iDend);
+        end
+    end
     
+
     
     % Write 3d points
     fprintf(fid,'//****************\n');
     fprintf(fid,'//COMPARTMENT LIST\n');
     fprintf(fid,'//****************\n\n');
+    fprintf(fid,'//beginpoints\n')
 
     if nargin >= 2
         fprintf(fid,'soma{\n');
@@ -80,7 +114,12 @@ for i = 1:num_axons,
         fprintf(fid,'}\n\n');
     end
     
-    
+    if nargin >= 3
+        for iDend = 1:nDends
+            writeDends(fid,DendStructs{iDend,iNeuron},iDend);
+        end
+    end
+
     nodectr = 0;
     mysactr = 0;
     flutctr = 0;
@@ -89,8 +128,6 @@ for i = 1:num_axons,
     for ctr = 1:lastnode
         ind = axonseg(ctr,7);
         switch ind
-            case 0 %initial segment
-                fprintf(fid,'initseg{\n');
             case 1 %node
                 fprintf(fid,'node[%d]{\n',nodectr);
                 nodectr = nodectr + 1;
@@ -132,13 +169,12 @@ end  % function end
 function [seg] = axonpointparse(tempseg)
 
     % Define paramter lengths and number of segments/parameter for the axon
-    isL = 25;        % initseg length
     nodeL = 1;      % NODE length
     mysaL = 3;      % MYSA length
     flutL = 10;     % FLUT length
     stinL = 57.67;  % STIN length
-    segLength = [isL,nodeL,mysaL,flutL,stinL,stinL,stinL,flutL,mysaL];
-    segType = [0,1,2,3,4,5,6,7,8];    % 0-initial segment 1-node, 2-MYSA, 3-FLUT, 4-STIN...
+    segLength = [nodeL,mysaL,flutL,stinL,stinL,stinL,flutL,mysaL];
+    segType = [1,2,3,4,5,6,7,8];    % 0-initial segment 1-node, 2-MYSA, 3-FLUT, 4-STIN...
     
     % Initialize coordinates in 'seg' corresponding to x,y,z
     x1 = tempseg(1,1); x2 = tempseg(2,1);
@@ -193,12 +229,38 @@ function [seg] = axonpointparse(tempseg)
         % If input array is axonal points, determine segment type and define segL accordingly
         segLctr = segLctr + 1; segTctr = segTctr + 1;
         if segLctr > length(segLength),
-            segLctr = 2; %Skip initial segment after first loop
+            segLctr = 1;
         end
         if segTctr > length(segType),
-            segTctr = 2; %Skip initial segment after first loop
+            segTctr = 1;
         end
         
     end
 
 end  % function end
+
+function writeDends(fid,DendStruct,iDend,formatStr)
+if nargin < 4
+    formatStr = '%d{\n';
+end
+formatSpec = [d
+fprintf(fid,formatStr,iDend);
+pos1 = DendStruct.startPoint*1e3;
+pos2 = DendStruct.endPoint*1e3;
+fprintf(fid,'pt3dadd(%f,%f,%f,0)\n',pos1(1),pos1(2),pos1(3));
+fprintf(fid,'pt3dadd(%f,%f,%f,0)\n',pos2(1),pos2(2),pos2(3));
+fprintf(fid,'}\n\n');
+
+switch formatStr
+    case 'dend%d{\n'
+        writeDends(fid,DendStruct.child1,iDend,[formatStr '_1']);
+        writeDends(fid,DendStruct.child2,iDend,[formatStr '_2']);
+    case {'dend%d_1','dend%d_2'}
+        writeDends(fid,DendStruct.child1,iDend,[formatStr '[1]']);
+        writeDends(fid,DendStruct.child2,iDend,[formatStr '[2]']);
+    case {'dend%d_1[1]','dend%d_1[2]','dend%d_2[1]','dend%d_2[2]'}
+    otherwise
+        error('bad formatSpec = ''%s''',formatStr);
+end
+
+end

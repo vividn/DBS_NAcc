@@ -83,13 +83,6 @@ proc topol() {
 				pt3dadd(x2,y2,z2,d2)
 				s.append(new SectionRef())
 			}
-		} else if (strcmp(seg,"init") == 0) {
-			initseg {
-				pt3dclear()
-				pt3dadd(x1,y1,z1,d1)
-				pt3dadd(x2,y2,z2,d2)
-				s.append(new SectionRef())
-			}
 		} else if (strcmp(seg,"node") == 0) {
 			node[segn] {
 				pt3dclear()

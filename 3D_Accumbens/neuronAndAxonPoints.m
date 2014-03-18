@@ -1,3 +1,4 @@
+function neuronAndAxonPoints()
 % Make a list of points for neurons in the nucleus accumbens and a
 % corresponding list of points in the ventral pallidum. Points are grouped
 % by ascending x-value so that medial neurons will have medial axons.
@@ -5,8 +6,9 @@ close all;
 clear all;
 warning('off','MATLAB:singularMatrix')
 
-nNeurons = 200;
-somaLength = 0.02; %in mm
+nNeurons = 20;
+somaLength = 0.015; %in mm
+dendLengthArray = [20, 24.23, 395.2]./1000; % from Wolf et al 2005
 % Final number of points in each axon contour
 ptsPerAxon = 100;
 
@@ -37,6 +39,7 @@ scatter3(vpPoints(:,1),vpPoints(:,2),vpPoints(:,3),'r');
 % sections:
 allAxonPts = NaN(ptsPerAxon,3,nNeurons);
 allSomaPts = NaN(2,3,nNeurons);
+allDends = cell(4,nNeurons);
 for iNeuron = 1:nNeurons
     axonPts = directedRandomWalk(accPoints(iNeuron,:),vpPoints(iNeuron,:),.4,.8);
     nAxonPts = size(axonPts,1);
@@ -52,7 +55,49 @@ for iNeuron = 1:nNeurons
     somaPts = [smoothAxon(1,:) + somaDir*somaLength; smoothAxon(1,:)];
     allSomaPts(:,:,iNeuron) = somaPts;
     
+    % Create 2 apical and 2 basilar dendrites
+    allDends{1,iNeuron} = branchingDend(somaPts(1,:),somaDir,dendLengthArray);
+    allDends{2,iNeuron} = branchingDend(somaPts(1,:),somaDir,dendLengthArray);
+    allDends{3,iNeuron} = branchingDend(somaPts(2,:),-somaDir,dendLengthArray);
+    allDends{4,iNeuron} = branchingDend(somaPts(2,:),-somaDir,dendLengthArray);
+    
     plot3(smoothAxon(:,1),smoothAxon(:,2),smoothAxon(:,3),'b'); 
 end
-axon_pts2hoc(allAxonPts,allSomaPts);
+axon_pts2hoc(allAxonPts,allSomaPts,allDends);
+end
+
+function DendStruct = branchingDend(startPoint,inputVector,lenArray)
+% Creates a branching dendrite recursively
+% Creates two dendrite pieces going in random direction, but within a
+% certain angle of the input segment
+% (the projection of the new vectors on the inputVector is greater than
+% cos(pi/4)).
+% The new dendrite pieces have the length of the first entry in lenArray
+% The process is then repeated recursively gradually shortening lenArray
+% until it is empty.
+%
+% Output: DendStruct
+%           -> startPoint 
+%           -> endPoint
+%           -> child1 (if it exists)
+%           -> child2 (if it exists)
+
+DendStruct.startPoint = startPoint;
+proj = -1;
+while proj < cos(pi/4)
+    % choose a random direction and see if forward movement occurs
+    newVector = unitvec(rand(1,3)-0.5);
+    proj = dot(newVector,unitvec(inputVector));
+end
+endPoint = startPoint + newVector * lenArray(1);
+plot3([startPoint(1);endPoint(1)],[startPoint(2);endPoint(2)],[startPoint(3);endPoint(3)],'g')
+DendStruct.endPoint = endPoint;
+if length(lenArray) > 1
+    DendStruct.child1 = branchingDend(endPoint,newVector,lenArray(2:end));
+    DendStruct.child2 = branchingDend(endPoint,newVector,lenArray(2:end));
+end
+end
+
+
+
     
