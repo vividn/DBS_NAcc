@@ -43,7 +43,7 @@ for i = 1:num_axons,
     axoninter = length([find(axonseg(1:lastnode,7)==4);...
         find(axonseg(1:lastnode,7)==5);...
         find(axonseg(1:lastnode,7)==6)]);
-    total = 1+ axonnodes + paranodes1 + paranodes2 + axoninter;
+    total = axonnodes + paranodes1 + paranodes2 + axoninter;
     
     % Write the header files
     fid = fopen(['..\axonpts\axon',num2str(i),'.txt'],'w');
@@ -57,14 +57,12 @@ for i = 1:num_axons,
     if nargin >= 2
         fprintf(fid,'create soma\n');
     end    
-    fprintf(fid,'create initseg\n');
     fprintf(fid,'create node[axonnodes], MYSA[paranodes1]\n');
     fprintf(fid,'create FLUT[paranodes2], STIN[axoninter]\n\n');    
     
     % Connection statements
     fprintf(fid,['//connect everything together\n',...
-        'connect initseg(0), soma(1)\n',...
-        'connect node[0](0), initseg(1)\n\n',...
+        'connect node[0](0), soma(1)\n\n',...
         'for i=0, axonnodes-2 {\n',...
         'connect MYSA[2*i](0), node[i](1)\n',...
 		'connect FLUT[2*i](0), MYSA[2*i](1)\n',...
@@ -145,13 +143,13 @@ end  % function end
 function [seg] = axonpointparse(tempseg)
 
     % Define paramter lengths and number of segments/parameter for the axon
-    isL = 25;        % initseg length
+    %isL = 25;        % initseg length
     nodeL = 1;      % NODE length
     mysaL = 3;      % MYSA length
     flutL = 10;     % FLUT length
     stinL = 57.67;  % STIN length
-    segLength = [isL,nodeL,mysaL,flutL,stinL,stinL,stinL,flutL,mysaL];
-    segType = [0,1,2,3,4,5,6,7,8];    % 0-initial segment 1-node, 2-MYSA, 3-FLUT, 4-STIN...
+    segLength = [nodeL,mysaL,flutL,stinL,stinL,stinL,flutL,mysaL];
+    segType = [1,2,3,4,5,6,7,8];    % 0-initial segment 1-node, 2-MYSA, 3-FLUT, 4-STIN...
     
     % Initialize coordinates in 'seg' corresponding to x,y,z
     x1 = tempseg(1,1); x2 = tempseg(2,1);
@@ -206,10 +204,10 @@ function [seg] = axonpointparse(tempseg)
         % If input array is axonal points, determine segment type and define segL accordingly
         segLctr = segLctr + 1; segTctr = segTctr + 1;
         if segLctr > length(segLength),
-            segLctr = 2; %Skip initial segment after first loop
+            segLctr = 1;
         end
         if segTctr > length(segType),
-            segTctr = 2; %Skip initial segment after first loop
+            segTctr = 1;
         end
         
     end
