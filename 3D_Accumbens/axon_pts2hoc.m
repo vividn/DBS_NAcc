@@ -51,7 +51,8 @@ for iNeuron = 1:nNeurons,
     fprintf(fid,'paranodes1 = %d\n',paranodes1);
     fprintf(fid,'paranodes2 = %d\n',paranodes2);
     fprintf(fid,'axoninter = %d\n',axoninter);
-    fprintf(fid,'totalAxon = %d\n\n',total);
+    fprintf(fid,'totalAxon = %d\n',total);
+    fprintf(fid,'nDends = %d\n\n',size(DendStructs,1));
 
     % Write the create statements
     if nargin >= 2
@@ -59,7 +60,7 @@ for iNeuron = 1:nNeurons,
     end
     if nargin >= 3
         nDends = size(DendStructs,1);
-        fprintf(fid,'create proxdend[%d], middend[%d], distdend[%d]\n',iDend,iDend*2,iDend*2*2);
+        fprintf(fid,'create proxdend[%d], middend[%d], distdend[%d]\n',nDends,nDends*2,nDends*2*2);
     end
     fprintf(fid,'create node[axonnodes], MYSA[paranodes1]\n');
     fprintf(fid,'create FLUT[paranodes2], STIN[axoninter]\n\n');    
@@ -93,7 +94,7 @@ for iNeuron = 1:nNeurons,
             fprintf(fid,'connect distdend[%d](0), middend[%d](1)\n',iDend*4,iDend*2);
             fprintf(fid,'connect distdend[%d](0), middend[%d](1)\n',iDend*4+1,iDend*2);
             fprintf(fid,'connect distdend[%d](0), middend[%d](1)\n',iDend*4+2,iDend*2+1);
-            fprintf(fid,'connect distdend[%d](0), middend[%d](1)\n',iDend*4+3,iDend*2+);
+            fprintf(fid,'connect distdend[%d](0), middend[%d](1)\n',iDend*4+3,iDend*2+1);
             fprintf(fid,'\n');
         end
     end

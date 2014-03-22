@@ -7,6 +7,7 @@ clear all;
 warning('off','MATLAB:singularMatrix')
 
 nNeurons = 20;
+nDends = 4;
 somaLength = 0.015; %in mm
 dendLengthArray = [20, 24.23, 395.2]./1000; % from Wolf et al 2005
 % Final number of points in each axon contour
@@ -39,7 +40,7 @@ scatter3(vpPoints(:,1),vpPoints(:,2),vpPoints(:,3),'r');
 % sections:
 allAxonPts = NaN(ptsPerAxon,3,nNeurons);
 allSomaPts = NaN(2,3,nNeurons);
-allDends = cell(4,nNeurons);
+allDends = cell(nDends,nNeurons);
 for iNeuron = 1:nNeurons
     axonPts = directedRandomWalk(accPoints(iNeuron,:),vpPoints(iNeuron,:),.4,.8);
     nAxonPts = size(axonPts,1);
@@ -55,11 +56,17 @@ for iNeuron = 1:nNeurons
     somaPts = [smoothAxon(1,:) + somaDir*somaLength; smoothAxon(1,:)];
     allSomaPts(:,:,iNeuron) = somaPts;
     
-    % Create 2 apical and 2 basilar dendrites
-    allDends{1,iNeuron} = branchingDend(somaPts(1,:),somaDir,dendLengthArray);
-    allDends{2,iNeuron} = branchingDend(somaPts(1,:),somaDir,dendLengthArray);
-    allDends{3,iNeuron} = branchingDend(somaPts(2,:),-somaDir,dendLengthArray);
-    allDends{4,iNeuron} = branchingDend(somaPts(2,:),-somaDir,dendLengthArray);
+    % Create dendrites
+    for iDend = 1:nDends
+        if (iDend+1)/nDends <= 0.5
+            somaSide = 1;
+            somaVec = somaDir*1;
+        else
+            somaSide = 2;
+            somaVec = somaDir*-1;
+        end
+        allDends{iDend,iNeuron} = branchingDend(somaPts(somaSide,:),somaVec,dendLengthArray);
+    end
     
     plot3(smoothAxon(:,1),smoothAxon(:,2),smoothAxon(:,3),'b'); 
 end
