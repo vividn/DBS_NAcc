@@ -1,5 +1,5 @@
-TITLE T-type calcium channel for nucleus accumbens neuron 
-: see comments at end of file
+TITLE N-type calcium channel for nucleus accumbens neuron 
+: comments at end of file
 
 UNITS {
 	(mV) = (millivolt)
@@ -12,35 +12,44 @@ UNITS {
 }
 
 NEURON {
-	SUFFIX cat
-	USEION cal READ cali, calo WRITE ical VALENCE 2
-	RANGE pcatbar, ical
+	SUFFIX can
+	USEION ca READ cai, cao WRITE ica
+	RANGE pbar, ica
 }
 
 PARAMETER {
-	pcatbar = 7.6e-7(cm/s)		: vh = -100, step to -30 mV
+	pbar = 1.0e-5	(cm/s)		: vh = -100 mV, 120 ms pulse to 0 mV
 
-	mvhalf = -51.73	(mV)		: McRory 2001, fig 7
-	mslope = -6.53	(mV)		: McRory 2001, fig 7
+	mvhalf = -8.7	(mV)		: Churchill 1998, fig 5
+	mslope = -7.4	(mV)		: Churchill 1998, fig 5
 	mshift = 0	(mV)
-	
-	hvhalf = -80	(mV)		: Churchill 1998, fig 3
-	hslope = 6.7	(mV)		: Churchill 1998, fig 3
+
+	hvhalf = -74.8	(mV)		: McNaughton 1997, Table 1
+	hslope = 6.5	(mV)		: McNaughton 1997, Table 1
 	hshift = 0	(mV)
-	
-	qfact = 3				: both m & h recorded at 22 C
-}					
+	htau = 70.0	(ms)		: McNaughton 1997, Table 2 (tau1 in Ca)
+
+	vm = -17.19  	(mV)		: fit from Kasai 1992, fig 15
+	k = 15.22   	(mV)		: fit from Kasai 1992, fig 15
+	kpr = 23.82   	(mV)		: fit from Kasai 1992, fig 15
+	c = 0.03856   	(/ms-mV)	: fit from Kasai 1992, fig 15
+	cpr = 0.3842	(/ms)		: fit from Kasai 1992, fig 15
+
+	a = 0.21		: percent inactivation
+	qfact = 3		: both m & h recorded at 22 C
+}
 
 ASSIGNED { 
-    v 		(mV)
-    ical 	(mA/cm2)
-    ecal		(mV)
-    
-    celsius	(degC)
-    cali		(mM)
-    calo		(mM)
+    v		(mV)
+    ica 	(mA/cm2)
 
+    celsius	(degC)
+    cai		(mM)
+    cao		(mM)
+    
     minf
+    mtau	(ms)
+
     hinf
 }
 
@@ -50,7 +59,7 @@ STATE {
 
 BREAKPOINT {
     SOLVE states METHOD cnexp
-    ical  = ghk(v,cali,calo) * pcatbar * m * m * m * h	: Wang 1991
+    ica  = ghk(v,cai,cao) * pbar * m * m * (a*h + (1-a))    : Kasai 92, Brown 93
 }
 
 INITIAL {
@@ -60,19 +69,23 @@ INITIAL {
 }
 
 DERIVATIVE states {  
-	settables(v)
-	m' = (minf - m) / (mtau(v)/qfact)
-	h' = (hinf - h) / (htau(v)/qfact)
+    settables(v)
+    m' = (minf - m) / (mtau/qfact)
+    h' = (hinf - h) / (htau/qfact)
 }
 
-FUNCTION_TABLE mtau(v(mV))	(ms)		: McRory 2001, Fig 6B
-FUNCTION_TABLE htau(v(mV))	(ms)		: McRory 2001, Fig 6E
-
 PROCEDURE settables( v (mV) ) {
-	TABLE minf, hinf DEPEND mshift, hshift
-        	FROM -100 TO 100 WITH 201
-			minf = 1  /  ( 1 + exp( (v-mvhalf-mshift) / mslope) )
-			hinf = 1  /  ( 1 + exp( (v-hvhalf-hshift) / hslope) ) 
+	LOCAL malpha, mbeta
+	
+	TABLE minf, hinf, mtau DEPEND mshift, hshift
+        FROM -100 TO 100 WITH 201
+
+		minf = 1  /  ( 1 + exp( (v-mvhalf-mshift) / mslope) )
+		hinf = 1  /  ( 1 + exp( (v-hvhalf-hshift) / hslope) )
+
+		malpha = c * (v-vm) / ( exp((v-vm)/k) - 1 )
+		mbeta = cpr * exp(v/kpr)		: Kasai 1992, fig 15
+		mtau = 1 / (malpha + mbeta)
 }
 
 
@@ -98,19 +111,18 @@ FUNCTION efun(z) {
 }
 
 
-
 COMMENT
+Brown AM, Schwindt PC, Crill WE (1993) Voltage dependence and activation
+kinetics of pharmacologically defined components of the high-threshold
+calcium current in rat neocortical neurons. J Neurophysiol 70:1530-1543.
+
 Churchill D, Macvicar BA (1998) Biophysical and pharmacological
 characterization of voltage-dependent Ca2+ channels in neurons isolated
 from rat nucleus accumbens. J Neurophysiol 79:635-647.
 
-McRory JE, Santi CM, Hamming KS, Mezeyova J, Sutton KG, Baillie DL, Stea
-A, Snutch TP (2001) Molecular and functional characterization of a
-family of rat brain T-type calcium channels. J Biol Chem 276:3999-4011.
-
-Wang XJ, Rinzel J, Rogawski MA (1991) A model of the T-type calcium
-current and the low-threshold spike in thalamic neurons. J Neurophysiol
-66:839-850.
+Kasai H, Neher E (1992) Dihydropyridine-sensitive and
+omega-conotoxin-sensitive calcium channels in a mammalian
+neuroblastoma-glioma cell line. J Physiol 448:161-188.
 
 Koch, C., and Segev, I., eds. (1998). Methods in Neuronal Modeling: From
 Ions to Networks, 2 edn (Cambridge, MA, MIT Press).
@@ -118,32 +130,13 @@ Ions to Networks, 2 edn (Cambridge, MA, MIT Press).
 Hille, B. (1992). Ionic Channels of Excitable Membranes, 2 edn
 (Sunderland, MA, Sinauer Associates Inc.).
 
+McNaughton NCL, Randall AD (1997) Electrophysiological properties of the
+human N-type calcium Ca2+ channel: I. Channel Gating in Ca2+, Ba2+, and
+Sr2+ containing solutions. Neuropharm 36:895-915.
 
 
-localization is not known (to me) - so gcatbar is calculated with cat in
-both soma and dendrites
 
-This is the low-threshold inactivating current in fig 3 from Churchill.
-
-See McRory 2001 - I'm using alpha G values for minf.  For one, the
-striatum seems to have all three types of subunits in equal amounts
-according (Fig 3), and G seems to represent the average of all three.
-Second, the inactivation inf values for G match Churchill's (fig. 3)
-values most closely of all three.  For both taus i'm using the I subunit
-b/c it seems to match churchill's data best (visually).
-
-I tried fitting the tau(v) curve using Wang's method, and got impressive
-results, but couldn't get matlab to reproduce the right curves.  Might
-be worth investigating.
-
-Make sure that cat_vec.hoc, taum_cat.txt, tauh_cat.txt, and vtau_cat.txt
-are in the same directory.  cat_vec.hoc reads the three text files into
-tables to hold the tau(v) values: taum_cat and tauh_cat have the mtau
-and htau values at the respective voltages in vtau_cat.
-
-eca should = 100 mV, based on Nernst Eq, [ca]i = 100uM, [ca]o = 5mM
-be sure to set eca in the hoc file for every section
-
+This is the w-conotoxin GV1A sensitive current in fig 5 from Churchill.
 
 
 The standard HH model uses a linear approximation to the driving force
@@ -168,5 +161,8 @@ gbar - dont know) and mca is analagous to m (check out Koch 1998 pg 144)
 Calcium current can then be modeled as 
 	ica = pcabar * mca * mca * ghk()
 
+Jason Moyer 2004 - jtmoyer@seas.upenn.edu
+
 ENDCOMMENT
+
 
