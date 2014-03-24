@@ -428,5 +428,109 @@ proc connect2target() { //$o1 target point process, $o2 returned NetCon
 
 func is_art() { return 0 }
 
+proc synloops() {
+	//***************************
+	//Build synapses
+	// Soma: 0 AMPA, 0 NMDA, 16 GABA
+	soma {
+		nAMPA = 0
+		nNMDA = 0
+		nGABA = 16
+		
+		for i = 0,nAMPA-1 {
+			onode = (i+1)/(nAMPA + 1)
+			ampa[i] = new AMPAt(0.5)
+			synlist.append(ampa[i])
+		}
+		
+		for i = 0,nNMDA-1 {
+			onode = (i+1)/(nNMDA + 1)
+			nmda[i] = new NMDAt(0.5)
+			synlist.append(nmda[i])
+		}
+		
+		for i = 0,nGABA-1 {
+			onode = (i+1)/(nGABA + 1)
+			gaba[i] = new GABAt(0.5)
+			synlist.append(gaba[i])
+		}
+	}
+	// Prox Dend: 1 AMPA, 1 NMDA, 3 GABA
+	forsec allProx {
+		nAMPA = 1
+		nNMDA = 1
+		nGABA = 3
+		
+		for i = 0,nAMPA-1 {
+			onode = (i+1)/(nAMPA + 1)
+			ampa[i] = new AMPAt(0.5)
+			synlist.append(ampa[i])
+		}
+		
+		for i = 0,nNMDA-1 {
+			onode = (i+1)/(nNMDA + 1)
+			nmda[i] = new NMDAt(0.5)
+			synlist.append(nmda[i])
+		}
+		
+		for i = 0,nGABA-1 {
+			onode = (i+1)/(nGABA + 1)
+			gaba[i] = new GABAt(0.5)
+			synlist.append(gaba[i])
+		}
+	}
+	
+	// Mid Dend: 2 AMPA, 2 NMDA, 3 GABA
+	forsec allMid {
+		nAMPA = 2
+		nNMDA = 2
+		nGABA = 3
+		
+		for i = 0,nAMPA-1 {
+			onode = (i+1)/(nAMPA + 1)
+			ampa[i] = new AMPAt(0.5)
+			synlist.append(ampa[i])
+		}
+		
+		for i = 0,nNMDA-1 {
+			onode = (i+1)/(nNMDA + 1)
+			nmda[i] = new NMDAt(0.5)
+			synlist.append(nmda[i])
+		}
+		
+		for i = 0,nGABA-1 {
+			onode = (i+1)/(nGABA + 1)
+			gaba[i] = new GABAt(0.5)
+			synlist.append(gaba[i])
+		}
+	}
+	
+	// Dist Dend: 4 AMPA, 4 NMDA, 2 GABA
+	forsec allDist {
+		nAMPA = 4
+		nNMDA = 4
+		nGABA = 2
+		
+		for i = 0,nAMPA-1 {
+			onode = (i+1)/(nAMPA + 1)
+			ampa[i] = new AMPAt(0.5)
+			synlist.append(ampa[i])
+		}
+		
+		for i = 0,nNMDA-1 {
+			onode = (i+1)/(nNMDA + 1)
+			nmda[i] = new NMDAt(0.5)
+			synlist.append(nmda[i])
+		}
+		
+		for i = 0,nGABA-1 {
+			onode = (i+1)/(nGABA + 1)
+			gaba[i] = new GABAt(0.5)
+			synlist.append(gaba[i])
+		}
+	}
+}
+	
+
 
 endtemplate NAccCell
