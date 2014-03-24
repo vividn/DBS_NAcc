@@ -1,0 +1,15 @@
+load_file("nrngui.hoc")
+load_file("NAccCell.hoc")
+
+objref cell1
+cell1 = new NAccCell(14)
+access cell1.soma
+
+objref ic
+ic = new IClamp(0.5)
+
+ic.dur = 100
+ic.del = 100
+ic.amp = 0.1
+
+tstop = 300

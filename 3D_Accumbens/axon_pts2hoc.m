@@ -1,4 +1,4 @@
-function [neuron] = axon_pts2hoc(axonpts,somapts)
+function [neuron] = axon_pts2hoc(axonpts,somapts,DendStructs)
 
 % axon_pts2hoc()
 %
@@ -15,18 +15,18 @@ function [neuron] = axon_pts2hoc(axonpts,somapts)
 % and adds 3d points for the soma, and connects it to the initialsegment
 
 h = waitbar(0,'Please wait...');
-num_axons = size(axonpts,3);
+nNeurons = size(axonpts,3);
 
 % cd ML_hocpoints;
 
 % Parse through axonal tree creating pre-defined segment lengths
 figure; hold on;
-for i = 1:num_axons,
+for iNeuron = 1:nNeurons,
 
-    waitbar(i/num_axons,h,['Parsing fiber: ',num2str(i)]);
+    waitbar(iNeuron/nNeurons,h,['Parsing fiber: ',num2str(iNeuron)]);
     
-    neuron(i).axonseg = axonpointparse(squeeze(axonpts(:,:,i))*1e3);
-    axonseg = neuron(i).axonseg;
+    neuron(iNeuron).axonseg = axonpointparse(squeeze(axonpts(:,:,iNeuron))*1e3);
+    axonseg = neuron(iNeuron).axonseg;
     
     % Calculate numbers for header file
     lastnode = find(axonseg(:,7)==1,1,'last');
@@ -43,28 +43,34 @@ for i = 1:num_axons,
     axoninter = length([find(axonseg(1:lastnode,7)==4);...
         find(axonseg(1:lastnode,7)==5);...
         find(axonseg(1:lastnode,7)==6)]);
-    total = 1+ axonnodes + paranodes1 + paranodes2 + axoninter;
+    total = axonnodes + paranodes1 + paranodes2 + axoninter;
     
     % Write the header files
-    fid = fopen(['..\axonpts\axon',num2str(i),'.txt'],'w');
+    fid = fopen(['..\axonpts\axon',num2str(iNeuron),'.txt'],'w');
     fprintf(fid,'axonnodes = %d\n',axonnodes);
     fprintf(fid,'paranodes1 = %d\n',paranodes1);
     fprintf(fid,'paranodes2 = %d\n',paranodes2);
     fprintf(fid,'axoninter = %d\n',axoninter);
-    fprintf(fid,'totalAxon = %d\n\n',total);
+    fprintf(fid,'totalAxon = %d\n',total);
+    fprintf(fid,'nDends = %d\n\n',size(DendStructs,1));
 
     % Write the create statements
     if nargin >= 2
         fprintf(fid,'create soma\n');
-    end    
-    fprintf(fid,'create initseg\n');
+    end
+    if nargin >= 3
+        nDends = size(DendStructs,1);
+        fprintf(fid,'create proxdend[%d], middend[%d], distdend[%d]\n',nDends,nDends*2,nDends*2*2);
+    end
     fprintf(fid,'create node[axonnodes], MYSA[paranodes1]\n');
     fprintf(fid,'create FLUT[paranodes2], STIN[axoninter]\n\n');    
     
     % Connection statements
-    fprintf(fid,['//connect everything together\n',...
-        'connect initseg(0), soma(1)\n',...
-        'connect node[0](0), initseg(1)\n\n',...
+    fprintf(fid,'//connect everything together\n');
+    if nargin >= 2
+        fprintf(fid,'connect node[0](0), soma(1)\n\n');
+    end
+    fprintf(fid,[...
         'for i=0, axonnodes-2 {\n',...
         'connect MYSA[2*i](0), node[i](1)\n',...
 		'connect FLUT[2*i](0), MYSA[2*i](1)\n',...
@@ -73,8 +79,25 @@ for i = 1:num_axons,
 		'connect STIN[3*i+2](0), STIN[3*i+1](1)\n',...
 		'connect FLUT[2*i+1](0), STIN[3*i+2](1)\n',...
 		'connect MYSA[2*i+1](0), FLUT[2*i+1](1)\n',...
-		'connect node[i+1](0), MYSA[2*i+1](1)	\n',...
+		'connect node[i+1](0), MYSA[2*i+1](1)\n',...
         '}\n\n']);
+    if nargin >= 3
+        for iDend = 0:nDends-1
+            if (iDend+1)/nDends <= 0.5
+                somaSide = 1;
+            else
+                somaSide = 0;
+            end
+            fprintf(fid,'connect proxdend[%d], soma(%d)\n',iDend,somaSide);
+            fprintf(fid,'connect middend[%d](0), proxdend[%d](1)\n',iDend*2,iDend);
+            fprintf(fid,'connect middend[%d](0), proxdend[%d](1)\n',iDend*2+1,iDend);
+            fprintf(fid,'connect distdend[%d](0), middend[%d](1)\n',iDend*4,iDend*2);
+            fprintf(fid,'connect distdend[%d](0), middend[%d](1)\n',iDend*4+1,iDend*2);
+            fprintf(fid,'connect distdend[%d](0), middend[%d](1)\n',iDend*4+2,iDend*2+1);
+            fprintf(fid,'connect distdend[%d](0), middend[%d](1)\n',iDend*4+3,iDend*2+1);
+            fprintf(fid,'\n');
+        end
+    end
     
 
     
@@ -93,7 +116,40 @@ for i = 1:num_axons,
         fprintf(fid,'}\n\n');
     end
     
-    
+    if nargin >= 3
+        for iDend = 0:nDends-1
+            pDend = DendStructs{iDend+1,nNeurons};
+            fprintf(fid,'proxdend[%d]{\n',iDend);
+            pos1 = pDend.startPoint*1e3;
+            pos2 = pDend.endPoint*1e3;
+            fprintf(fid,'pt3dadd(%f,%f,%f,0)\n',pos1(1),pos1(2),pos1(3));
+            fprintf(fid,'pt3dadd(%f,%f,%f,0)\n',pos2(1),pos2(2),pos2(3));
+            fprintf(fid,'}\n\n');
+            
+            for iMid = 0:1
+                if iMid == 0, mDend = pDend.child1, end
+                if iMid == 1, mDend = pDend.child2, end
+                fprintf(fid,'middend[%d]{\n',iDend*2+iMid);
+                pos1 = mDend.startPoint*1e3;
+                pos2 = mDend.endPoint*1e3;
+                fprintf(fid,'pt3dadd(%f,%f,%f,0)\n',pos1(1),pos1(2),pos1(3));
+                fprintf(fid,'pt3dadd(%f,%f,%f,0)\n',pos2(1),pos2(2),pos2(3));
+                fprintf(fid,'}\n\n');
+                
+                for iDist = 0:1
+                    if iDist == 0, dDend = mDend.child1, end
+                    if iDist == 1, dDend = mDend.child2, end
+                    fprintf(fid,'distdend[%d]{\n',iDend*4+iMid*2+iDist);
+                    pos1 = dDend.startPoint*1e3;
+                    pos2 = dDend.endPoint*1e3;
+                    fprintf(fid,'pt3dadd(%f,%f,%f,0)\n',pos1(1),pos1(2),pos1(3));
+                    fprintf(fid,'pt3dadd(%f,%f,%f,0)\n',pos2(1),pos2(2),pos2(3));
+                    fprintf(fid,'}\n\n');
+                end
+            end
+        end
+    end
+
     nodectr = 0;
     mysactr = 0;
     flutctr = 0;
@@ -102,8 +158,6 @@ for i = 1:num_axons,
     for ctr = 1:lastnode
         ind = axonseg(ctr,7);
         switch ind
-            case 0 %initial segment
-                fprintf(fid,'initseg{\n');
             case 1 %node
                 fprintf(fid,'node[%d]{\n',nodectr);
                 nodectr = nodectr + 1;
@@ -145,13 +199,12 @@ end  % function end
 function [seg] = axonpointparse(tempseg)
 
     % Define paramter lengths and number of segments/parameter for the axon
-    isL = 25;        % initseg length
     nodeL = 1;      % NODE length
     mysaL = 3;      % MYSA length
     flutL = 10;     % FLUT length
     stinL = 57.67;  % STIN length
-    segLength = [isL,nodeL,mysaL,flutL,stinL,stinL,stinL,flutL,mysaL];
-    segType = [0,1,2,3,4,5,6,7,8];    % 0-initial segment 1-node, 2-MYSA, 3-FLUT, 4-STIN...
+    segLength = [nodeL,mysaL,flutL,stinL,stinL,stinL,flutL,mysaL];
+    segType = [1,2,3,4,5,6,7,8];    % 0-initial segment 1-node, 2-MYSA, 3-FLUT, 4-STIN...
     
     % Initialize coordinates in 'seg' corresponding to x,y,z
     x1 = tempseg(1,1); x2 = tempseg(2,1);
@@ -206,10 +259,10 @@ function [seg] = axonpointparse(tempseg)
         % If input array is axonal points, determine segment type and define segL accordingly
         segLctr = segLctr + 1; segTctr = segTctr + 1;
         if segLctr > length(segLength),
-            segLctr = 2; %Skip initial segment after first loop
+            segLctr = 1;
         end
         if segTctr > length(segType),
-            segTctr = 2; %Skip initial segment after first loop
+            segTctr = 1;
         end
         
     end
