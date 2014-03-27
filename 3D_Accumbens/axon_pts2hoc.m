@@ -127,8 +127,8 @@ for iNeuron = 1:nNeurons,
             fprintf(fid,'}\n\n');
             
             for iMid = 0:1
-                if iMid == 0, mDend = pDend.child1, end
-                if iMid == 1, mDend = pDend.child2, end
+                if iMid == 0, mDend = pDend.child;, end
+                if iMid == 1, mDend = pDend.child2; end
                 fprintf(fid,'middend[%d]{\n',iDend*2+iMid);
                 pos1 = mDend.startPoint*1e3;
                 pos2 = mDend.endPoint*1e3;
@@ -137,8 +137,8 @@ for iNeuron = 1:nNeurons,
                 fprintf(fid,'}\n\n');
                 
                 for iDist = 0:1
-                    if iDist == 0, dDend = mDend.child1, end
-                    if iDist == 1, dDend = mDend.child2, end
+                    if iDist == 0, dDend = mDend.child1; end
+                    if iDist == 1, dDend = mDend.child2; end
                     fprintf(fid,'distdend[%d]{\n',iDend*4+iMid*2+iDist);
                     pos1 = dDend.startPoint*1e3;
                     pos2 = dDend.endPoint*1e3;

@@ -6,7 +6,7 @@ close all;
 clear all;
 warning('off','MATLAB:singularMatrix')
 
-nNeurons = 20;
+nNeurons = 100;
 nDends = 4;
 somaLength = 0.015; %in mm
 dendLengthArray = [20, 24.23, 395.2]./1000; % from Wolf et al 2005
