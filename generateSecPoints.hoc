@@ -5,18 +5,21 @@ load_file("tappend.hoc")
 objref fid
 fid = new File("secPoints.txt")
 
-objref allS
-objref cell
+objref allS, cell, cellList
+
 proc generateSecPoints() { //$1 = number of neurons
+	nNeurons = $1
 	fid.wopen()
 	allS = new List()
+	cellList = new List()
 	
-	for i = 1,$1 {
-		cell = new NAccCell($1)
-		define_shape() //updates all points to their correct position
+	for iNeuron = 1 , nNeurons {
+		print iNeuron
+		cell = new NAccCell(iNeuron)
+		cellList.append(cell)
 		tappend(allS,cell.s)
 	}
-	
+	define_shape() //updates all points to their correct position
 	for j = 0,allS.count()-1 {
 		allS.o(j).sec {
 			//Find the midpoint
@@ -35,4 +38,6 @@ proc generateSecPoints() { //$1 = number of neurons
 		}
 	}
 	fid.close()
-}	
+}
+
+generateSecPoints(100)

@@ -20,9 +20,15 @@ VP = importdata('VPMesh.raw');
 VP = VP.data;
 
 figure(1)
+%Plot DBS electrode line
+DBSx = [7.51287;12.3506];
+DBSy = [8.22211;4.09026];
+DBSz = [-6.57997;1.77312];
+
+plot3(DBSx,DBSy,DBSz,'m','LineWidth',4);
+
 accPoints = generateInternalPoints(Acc,nNeurons);
 accPoints = sortrows(accPoints,1);
-clf;
 
 vpPoints = generateInternalPoints(VP,nNeurons);
 vpPoints = sortrows(vpPoints,1);
@@ -32,6 +38,7 @@ figure(1);
 hold on;
 scatter3(accPoints(:,1),accPoints(:,2),accPoints(:,3),'g');
 scatter3(vpPoints(:,1),vpPoints(:,2),vpPoints(:,3),'r');
+plot3(DBSx,DBSy,DBSz,'m','LineWidth',4);
 
 % The accPoints are where the neuron and the axon connect
 % The vpPoints are where the axon ends.
@@ -70,6 +77,8 @@ for iNeuron = 1:nNeurons
     
     plot3(smoothAxon(:,1),smoothAxon(:,2),smoothAxon(:,3),'b'); 
 end
+
+
 axon_pts2hoc(allAxonPts,allSomaPts,allDends);
 end
 
