@@ -1,3 +1,6 @@
+load_file("baseline_values.txt")
+// all_tau_vecs.hoc loads the tables used to define the taus for many channels
+load_file("all_tau_vecs.hoc")
 load_file("synapse_templates.hoc")
 
 begintemplate NAccCell
@@ -47,6 +50,9 @@ proc init() { //$1 = cell number
 	initsoma()
 	initdends()
 	initaxon()
+	
+	//specify biophysical parameters
+	initchannels()
 	
 	geom_nseg()
 	synlist = new List()
@@ -208,13 +214,12 @@ proc subsets() {
 	forsec "mid" {allMid.append() allDend.append()}
 	forsec "dist" {allDist.append() allDend.append()}
 	
-	forall allSecs.append()
+	for i = 0,s.count()-1 {
+		s.o(i).sec {allSecs.append()}
+	}
 }
 
 proc model_globals(){
-	celsius = 36
-	v_init = -86 //resting potential of downstate MSP (Nicola et al, 2000)
-
 	//morphological parameters of the soma
 	somaD = 16
 	
@@ -279,11 +284,7 @@ proc geom() {
 }	
 
 proc initsoma() {
-	soma {
-		
-		Ra = 80
-		cm = 1
-		
+	soma {		
 		insert pas
 
 		insert naf
@@ -338,13 +339,7 @@ proc initdends() {
 	
 	
 
-proc initaxon() {	
-	forsec allAxon{
-		nseg = 1
-		Ra = rhoa/10000
-		cm = 2
-	}
-	
+proc initaxon() {		
 	forsec allNode {
 		insert axnode70
 		insert extracellular xraxial=Rpn0 xg=1e10 xc=0
@@ -352,34 +347,85 @@ proc initaxon() {
     node[axonnodes-1] { //Last node has some differences to avoid edge effects 
 		uninsert axnode70
 		insert pas
-			g_pas = 0.0001
-			e_pas = v_init 
 	}
 	
 	forsec allMYSA {
 		insert pas
-			g_pas = 0.0001
-			e_pas = v_init
 		insert extracellular xraxial=Rpn1 xg=mygm/(nl*2) xc=mycm/(nl*2)
 	}
 	
 	forsec allFLUT {
 		insert parak70
 		insert pas
-			g_pas = 0.0001		
-			e_pas = v_init
 		insert extracellular xraxial=Rpn2 xg=mygm/(nl*2) xc=mycm/(nl*2)
 	}
 	
 	forsec allSTIN {
 		insert pas
-			g_pas = 0.0001
-			e_pas = v_init
 		insert extracellular xraxial=Rpx xg=mygm/(nl*2) xc=mycm/(nl*2)
 		
 	}
 }
 
+proc initchannels(){
+	forsec allSecs {
+		if (ismembrane("pas")) {g_pas = G_PAS}
+		
+		if (ismembrane("kir")) {gkbar_kir = G_KIR}
+		if (ismembrane("krp")) {gkbar_krp = G_KRP}
+		if(ismembrane("bkkca")) {gkbar_bkkca = G_BKKCA}
+		if(ismembrane("skkca")) {gkbar_skkca = G_SKKCA}
+		
+		if (ismembrane("caL")) {pbar_caL = P_CAL}
+		if (ismembrane("caL13")) {pcaLbar_caL13 = P_CAL13}
+		if (ismembrane("can")) {pbar_can = P_CAN}
+		if (ismembrane("caq")) {pcaqbar_caq = P_CAQ}
+		if (ismembrane("car")) {pcarbar_car = P_CAR}
+		if (ismembrane("cat")) {pcatbar_cat = P_CAT}
+		
+		if (ismembrane("cadyn")) {
+			cainf_cadyn = CA_INF
+			taur_cadyn = CA_TAUR
+			drive_cadyn = CA_DRIVE
+			pump_cadyn = CA_PUMP
+			}
+		if (ismembrane("caldyn")) {
+			cainf_caldyn = CA_INF
+			taur_caldyn = CA_TAUR
+			drive_caldyn = CA_DRIVE
+			pump_caldyn = CA_PUMP
+			}
+			
+		ek = EK
+	}
+	
+	soma {
+		gnabar_naf = G_NAF
+		gnabar_nap = G_NAP
+		gkbar_kas = G_KAS
+		gkbar_kaf = G_KAF
+	}
+	forsec allProx {
+		gnabar_naf = G_NAFD
+		gnabar_nap = G_NAPD
+		gkbar_kas = G_KAS
+		gkbar_kaf = G_KAF
+	}
+	forsec allMid {
+		gnabar_naf = G_NAFD
+		gnabar_nap = G_NAPD
+		gkbar_kas = G_KASD
+		gkbar_kaf = G_KAFD
+	}
+	
+	forsec allDist {
+		gnabar_naf = G_NAFD
+		gnabar_nap = G_NAPD
+		gkbar_kas = G_KASD
+		gkbar_kaf = G_KAFD
+	}
+}
+		
 
 //**********
 // use d_lambda function (see neuron website) to assign segments/nodes
