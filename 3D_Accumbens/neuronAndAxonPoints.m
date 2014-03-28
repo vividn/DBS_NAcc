@@ -21,16 +21,18 @@ VP = VP.data;
 
 figure(1)
 %Plot DBS electrode line
-DBSx = [7.51287;12.3506];
-DBSy = [8.22211;4.09026];
-DBSz = [-6.57997;1.77312];
+c0 = [7.51287,6,-6];
+c1 = [12.3506,1.86815,2.35309];
+DBSx = [c0(1);c1(1)];
+DBSy = [c0(2);c1(2)];
+DBSz = [c0(3);c1(3)];
 
 plot3(DBSx,DBSy,DBSz,'m','LineWidth',4);
 
-accPoints = generateInternalPoints(Acc,nNeurons);
+accPoints = generateInternalPoints(Acc,nNeurons,'g');
 accPoints = sortrows(accPoints,1);
 
-vpPoints = generateInternalPoints(VP,nNeurons);
+vpPoints = generateInternalPoints(VP,nNeurons,'r');
 vpPoints = sortrows(vpPoints,1);
 
 close all;

@@ -21,10 +21,9 @@ VP = VP.data;
 
 figure(1)
 %Plot DBS electrode line
-8.51287,,
-,,
-DBSx = [6.51287;13.3506];
-DBSy = [5.22211;1.09026];
+c0 
+DBSx = [7.51287;12.3506];
+DBSy = [8.22211;4.09026];
 DBSz = [-6.57997;1.77312];
 
 plot3(DBSx,DBSy,DBSz,'m','LineWidth',4);

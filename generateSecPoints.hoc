@@ -7,6 +7,8 @@ fid = new File("secPoints.txt")
 
 objref allS, cell, cellList
 
+nCells = 100
+
 proc generateSecPoints() { //$1 = number of neurons
 	nNeurons = $1
 	fid.wopen()
@@ -19,7 +21,6 @@ proc generateSecPoints() { //$1 = number of neurons
 		cellList.append(cell)
 		tappend(allS,cell.s)
 	}
-	define_shape() //updates all points to their correct position
 	for j = 0,allS.count()-1 {
 		allS.o(j).sec {
 			//Find the midpoint
@@ -40,4 +41,4 @@ proc generateSecPoints() { //$1 = number of neurons
 	fid.close()
 }
 
-generateSecPoints(100)
+generateSecPoints(nCells)

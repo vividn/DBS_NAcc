@@ -17,11 +17,12 @@ outputFileName = '../allVoltages.txt';
 % c0/c3 points until they match up with [0,0,0] and [0,0,3].  Click the
 % 'Details' command button on the properties panel, and copy and then 
 % paste the transformation matrix into the code below.
-transmatrix = [0.88177443748849005, 0.10097511446662021, -0.46073622350571686, -1.5612511283791264e-17
-        0.10097511446662021, 0.91375829790994301, 0.39350959233438881, 6.8087896432089678e-16
-        0.46073622350571686, -0.39350959233438881, 0.79553273539843306, -6.8261368779687359e-16
+transmatrix = [0.88177443748849016, 0.10097511446662012, -0.46073622350571669, -9.9949213094004072
+        0.10097511446662012, 0.91375829790994301, 0.39350959233438859, -3.8801047481380335
+        0.46073622350571669, -0.39350959233438859, 0.79553273539843317, 3.6728044105704827
         0, 0, 0, 1];
-
+    
+    
 % Load the secPts file
 secPts = importdata(secPtsFileName);
 nPts = size(secPts,1);
@@ -33,6 +34,14 @@ for iPt = 1:nPts
     newPoint = transmatrix * point;
     transPts(iPt,:) = newPoint(1:3)';
 end
+
+% Plot for sanity check
+figure;
+scatter3(secPts(:,1),secPts(:,2),secPts(:,3),'.');
+axis equal
+figure;
+scatter3(transPts(:,1),transPts(:,2),transPts(:,3),'.');
+axis equal
 
 % Load the finite element model
 model = mphload(femFileName);
