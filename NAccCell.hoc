@@ -19,6 +19,9 @@ create soma, node[1], MYSA[1], FLUT[1], STIN[1]
 public proxdend, middend, distdend
 create proxdend[1], middend[1], distdend[1]
 
+//numbers of each section
+public axonnodes,paranodes1,paranodes2,axoninter,totalAxon,nDends
+
 public allNode, allMYSA, allFLUT, allSTIN, allAxon
 public allProx, allMid, allDist, allDend
 public allSecs
