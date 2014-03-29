@@ -1,4 +1,4 @@
-function pathVerts = directedRandomWalk(startPoint,targetPoint,stepSize,randomness)
+function pathVerts = directedRandomWalk(startPoint,targetPoint,stepSize,randomness,biasFac)
 % Function creates a random path from the startPoint to the targetPoint.
 % The program uses a biased random walk, which adds a random direction
 % vector with a vector always pointing towards the target. The vector

@@ -3,6 +3,6 @@ load_file("NAccCell.hoc")
 
 objref cellList
 cellList = new List()
-for i=1,200 {
+for i=1,100 {
 	cellList.append(new NAccCell(i))
 }
