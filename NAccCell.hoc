@@ -4,6 +4,12 @@ load_file("all_tau_vecs.hoc")
 load_file("synapse_templates.hoc")
 
 begintemplate NAccCell
+external RA,CM, G_PAS,E_PAS, G_NAF,G_NAFD,G_NAP,G_NAPD
+external G_KIR,G_KAS,G_KASD,G_KAF,G_KAFD,G_KRP,G_BKKCA,G_SKKCA
+external CAINF,TAUR,CA_DRIVE,CA_PUMP
+external caNMDA,P_CAL,P_CALD,P_CAL13,P_CAL13D,P_CAN,P_CAQ,P_CAR,P_CAT
+external EK,ENA
+
 public is_art
 public init
 public synlist, connect2target
@@ -371,7 +377,7 @@ proc initchannels(){
 	forsec allSecs {
 		if (ismembrane("pas")) {g_pas = G_PAS}
 		
-		if (ismembrane("kir")) {gkbar_kir = G_KIR}
+		if (ismembrane("kir")) {gkbar_kir = G_KIR	ek = EK}
 		if (ismembrane("krp")) {gkbar_krp = G_KRP}
 		if(ismembrane("bkkca")) {gkbar_bkkca = G_BKKCA}
 		if(ismembrane("skkca")) {gkbar_skkca = G_SKKCA}
@@ -384,19 +390,19 @@ proc initchannels(){
 		if (ismembrane("cat")) {pcatbar_cat = P_CAT}
 		
 		if (ismembrane("cadyn")) {
-			cainf_cadyn = CA_INF
-			taur_cadyn = CA_TAUR
+			cainf_cadyn = CAINF
+			taur_cadyn = TAUR
 			drive_cadyn = CA_DRIVE
 			pump_cadyn = CA_PUMP
 			}
 		if (ismembrane("caldyn")) {
-			cainf_caldyn = CA_INF
-			taur_caldyn = CA_TAUR
+			cainf_caldyn = CAINF
+			taur_caldyn = TAUR
 			drive_caldyn = CA_DRIVE
 			pump_caldyn = CA_PUMP
 			}
-			
-		ek = EK
+		Ra = RA
+		cm = CM
 	}
 	
 	soma {
