@@ -25,11 +25,7 @@ load_file("all_tau_vecs.hoc")
 load_file("NAccCell.hoc")
 //****************************************************************************
 
-
-
 create acell_home_
-
-
 
 //****************************************************************************
 // load netstims template, sets default interval, number, noise

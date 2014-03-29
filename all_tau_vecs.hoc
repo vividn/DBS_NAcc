@@ -1,6 +1,10 @@
 //**************************************************************************
 // All_Tau_Vecs loads the tables used to define the taus for channels
 
+strdef preface
+preface = "./"
+
+strdef dirstr
 
 objref taum_
 objref tauh_
@@ -13,25 +17,24 @@ taum_ = new Vector(16,0)
 tauh_ = new Vector(16,0)
 vtau_ = new Vector(16,0)
 
+//tmps are to supress output
+tmp = sprint(dirstr, "%s/tau_tables/taum_naf.txt", preface)
+tmp = file_.ropen (dirstr)
+tmp = taum_.scanf(file_)
+tmp = file_.close()
 
-sprint(dirstr, "%s/tau_tables/taum_naf.txt", preface)
-file_.ropen (dirstr)
-taum_.scanf(file_)
-file_.close()
+tmp = sprint(dirstr, "%s/tau_tables/tauh_naf.txt", preface)
+tmp = file_.ropen (dirstr)
+tmp = tauh_.scanf(file_)
+tmp = file_.close()
 
-sprint(dirstr, "%s/tau_tables/tauh_naf.txt", preface)
-file_.ropen (dirstr)
-tauh_.scanf(file_)
-file_.close()
+tmp = sprint(dirstr, "%s/tau_tables/vtau_naf.txt", preface)
+tmp = file_.ropen (dirstr)
+tmp = vtau_.scanf(file_)
+tmp = file_.close()
 
-sprint(dirstr, "%s/tau_tables/vtau_naf.txt", preface)
-file_.ropen (dirstr)
-vtau_.scanf(file_)
-file_.close()
-
-table_taumnaf_naf(taum_,vtau_)
-table_tauhnaf_naf(tauh_,vtau_)
-
+tmp = table_taumnaf_naf(taum_,vtau_)
+tmp = table_tauhnaf_naf(tauh_,vtau_)
 
 //*************************
 
@@ -46,17 +49,17 @@ file_nap_ = new File ()
 tauh_nap_ = new Vector(15,0)
 vtau_nap_ = new Vector(15,0)
 
-sprint(dirstr, "%s/tau_tables/tauh_nap.txt", preface)
-file_nap_.ropen (dirstr)
-tauh_nap_.scanf(file_nap_)
-file_nap_.close()
+tmp = sprint(dirstr, "%s/tau_tables/tauh_nap.txt", preface)
+tmp = file_nap_.ropen (dirstr)
+tmp = tauh_nap_.scanf(file_nap_)
+tmp = file_nap_.close()
 
-sprint(dirstr, "%s/tau_tables/vtau_nap.txt", preface)
-file_nap_.ropen (dirstr)
-vtau_nap_.scanf(file_nap_)
-file_nap_.close()
+tmp = sprint(dirstr, "%s/tau_tables/vtau_nap.txt", preface)
+tmp = file_nap_.ropen (dirstr)
+tmp = vtau_nap_.scanf(file_nap_)
+tmp = file_nap_.close()
 
-table_tauhnap_nap(tauh_nap_,vtau_nap_)
+tmp = table_tauhnap_nap(tauh_nap_,vtau_nap_)
 
 
 
@@ -74,17 +77,17 @@ file_kir_ = new File ()
 taum_kir_ = new Vector(16,0)
 vtau_kir_ = new Vector(16,0)
 
-sprint(dirstr, "%s/tau_tables/taum_kir.txt", preface)
-file_kir_.ropen (dirstr)
-taum_kir_.scanf(file_kir_)
-file_kir_.close()
+tmp = sprint(dirstr, "%s/tau_tables/taum_kir.txt", preface)
+tmp = file_kir_.ropen (dirstr)
+tmp = taum_kir_.scanf(file_kir_)
+tmp = file_kir_.close()
 
-sprint(dirstr, "%s/tau_tables/vtau_kir.txt", preface)
-file_kir_.ropen (dirstr)
-vtau_kir_.scanf(file_kir_)
-file_kir_.close()
+tmp = sprint(dirstr, "%s/tau_tables/vtau_kir.txt", preface)
+tmp = file_kir_.ropen (dirstr)
+tmp = vtau_kir_.scanf(file_kir_)
+tmp = file_kir_.close()
 
-table_taumkir_kir(taum_kir_,vtau_kir_)
+tmp = table_taumkir_kir(taum_kir_,vtau_kir_)
 
 
 
@@ -103,23 +106,23 @@ taum_krp_ = new Vector(31,0)
 tauh_krp_ = new Vector(31,0)
 vtau_krp_ = new Vector(31,0)
 
-sprint(dirstr, "%s/tau_tables/taum_krp.txt", preface)
-file_krp_.ropen (dirstr)
-taum_krp_.scanf(file_krp_)
-file_krp_.close()
+tmp = sprint(dirstr, "%s/tau_tables/taum_krp.txt", preface)
+tmp = file_krp_.ropen (dirstr)
+tmp = taum_krp_.scanf(file_krp_)
+tmp = file_krp_.close()
 
-sprint(dirstr, "%s/tau_tables/tauh_krp.txt", preface)
-file_krp_.ropen (dirstr)
-tauh_krp_.scanf(file_krp_)
-file_krp_.close()
+tmp = sprint(dirstr, "%s/tau_tables/tauh_krp.txt", preface)
+tmp = file_krp_.ropen (dirstr)
+tmp = tauh_krp_.scanf(file_krp_)
+tmp = file_krp_.close()
 
-sprint(dirstr, "%s/tau_tables/vtau_krp.txt", preface)
-file_krp_.ropen (dirstr)
-vtau_krp_.scanf(file_krp_)
-file_krp_.close()
+tmp = sprint(dirstr, "%s/tau_tables/vtau_krp.txt", preface)
+tmp = file_krp_.ropen (dirstr)
+tmp = vtau_krp_.scanf(file_krp_)
+tmp = file_krp_.close()
 
-table_taumkrp_krp(taum_krp_,vtau_krp_)
-table_tauhkrp_krp(tauh_krp_,vtau_krp_)
+tmp = table_taumkrp_krp(taum_krp_,vtau_krp_)
+tmp = table_tauhkrp_krp(tauh_krp_,vtau_krp_)
 
 
 
@@ -136,17 +139,17 @@ file_kaf_ = new File ()
 mtau_kaf_ = new Vector(31,0)
 vtau_kaf_ = new Vector(31,0)
 
-sprint(dirstr, "%s/tau_tables/taum_kaf.txt", preface)
-file_kaf_.ropen (dirstr)
-mtau_kaf_.scanf(file_kaf_)
-file_kaf_.close()
+tmp = sprint(dirstr, "%s/tau_tables/taum_kaf.txt", preface)
+tmp = file_kaf_.ropen (dirstr)
+tmp = mtau_kaf_.scanf(file_kaf_)
+tmp = file_kaf_.close()
 
-sprint(dirstr, "%s/tau_tables/vtau_kaf.txt", preface)
-file_kaf_.ropen (dirstr)
-vtau_kaf_.scanf(file_kaf_)
-file_kaf_.close()
+tmp = sprint(dirstr, "%s/tau_tables/vtau_kaf.txt", preface)
+tmp = file_kaf_.ropen (dirstr)
+tmp = vtau_kaf_.scanf(file_kaf_)
+tmp = file_kaf_.close()
 
-table_mtau_kaf(mtau_kaf_,vtau_kaf_)
+tmp = table_mtau_kaf(mtau_kaf_,vtau_kaf_)
 
 
 
@@ -165,23 +168,23 @@ taum_catvec = new Vector(30,0)
 tauh_catvec = new Vector(30,0)
 vtau_catvec = new Vector(30,0)
 
-sprint(dirstr, "%s/tau_tables/taum_cat.txt", preface)
-file_cat.ropen (dirstr)
-taum_catvec.scanf(file_cat)
-file_cat.close()
+tmp = sprint(dirstr, "%s/tau_tables/taum_cat.txt", preface)
+tmp = file_cat.ropen (dirstr)
+tmp = taum_catvec.scanf(file_cat)
+tmp = file_cat.close()
 
-sprint(dirstr, "%s/tau_tables/tauh_cat.txt", preface)
-file_cat.ropen (dirstr)
-tauh_catvec.scanf(file_cat)
-file_cat.close()
+tmp = sprint(dirstr, "%s/tau_tables/tauh_cat.txt", preface)
+tmp = file_cat.ropen (dirstr)
+tmp = tauh_catvec.scanf(file_cat)
+tmp = file_cat.close()
 
-sprint(dirstr, "%s/tau_tables/vtau_cat.txt", preface)
-file_cat.ropen (dirstr)
-vtau_catvec.scanf(file_cat)
-file_cat.close()
+tmp = sprint(dirstr, "%s/tau_tables/vtau_cat.txt", preface)
+tmp = file_cat.ropen (dirstr)
+tmp = vtau_catvec.scanf(file_cat)
+tmp = file_cat.close()
 
-table_mtau_cat(taum_catvec, vtau_catvec)
-table_htau_cat(tauh_catvec, vtau_catvec)
+tmp = table_mtau_cat(taum_catvec, vtau_catvec)
+tmp = table_htau_cat(tauh_catvec, vtau_catvec)
 
 
 
@@ -196,26 +199,15 @@ file_car = new File ()
 tauh_carvec = new Vector(30,0)
 vtau_carvec = new Vector(30,0)
 
-sprint(dirstr, "%s/tau_tables/tauh_car.txt", preface)
-file_car.ropen (dirstr)
-tauh_carvec.scanf(file_car)
-file_car.close()
+tmp = sprint(dirstr, "%s/tau_tables/tauh_car.txt", preface)
+tmp = file_car.ropen (dirstr)
+tmp = tauh_carvec.scanf(file_car)
+tmp = file_car.close()
 
-sprint(dirstr, "%s/tau_tables/vtau_car.txt", preface)
-file_car.ropen (dirstr)
-vtau_carvec.scanf(file_car)
-file_car.close()
+tmp = sprint(dirstr, "%s/tau_tables/vtau_car.txt", preface)
+tmp = file_car.ropen (dirstr)
+tmp = vtau_carvec.scanf(file_car)
+tmp = file_car.close()
 
-table_htau_car(tauh_carvec, vtau_carvec)
-
-
-
+tmp = table_htau_car(tauh_carvec, vtau_carvec)
 //**************************************************************************
-
-
-
-
-
-
-
-
