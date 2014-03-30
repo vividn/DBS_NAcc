@@ -22,11 +22,11 @@ forsec cell.allSecs{
 objref ic
 ic = new IClamp(0.5)
 
-ic.dur = 40
+ic.dur = 35
 ic.del = 5
 ic.amp = 1.3
 
-tstop = 80
+tstop = 50
 
 load_file("testcell.ses")
 run()

@@ -1,20 +1,14 @@
+//NEURON 7.3 code
 begintemplate NAccCell
 public soma, dend, node
 create soma, dend[4], node[30]
 
-proc init() { //$1 = cell number
-	//Specify 3D points and connect sections
-	topol()
-	
-	//Add biophysics
-	initsoma()
-	initdends()
-	initaxon()
-}
-
 proc topol() {
+	//Specify 3D points and connect sections
+	connect node[0](0), soma(1)
 	curline = ""
-	while(strcmp(curline,"//beginpoints\n") != 0) {fid.gets(curline)}
+	while(strcmp(curline,"//beginpoints\n") != 0)
+		{fid.gets(curline)}
 	while(fid.gets(curline) != -1) {
 		//get the segment name and array index
 		segn = -1

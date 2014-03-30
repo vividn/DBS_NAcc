@@ -50,6 +50,15 @@ for i = 0,cells.count-1 {
 	}
 }
 
+objref ic
+curcell.soma ic = new IClamp(0.5)
+
+ic.dur = 40
+ic.del = 5
+ic.amp = 0.2481
+
+tstop = 800
+
 //******************
 // synaptic gbar procs
 proc gampa() {	NEW = $1		// AMPA conductance
