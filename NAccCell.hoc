@@ -14,6 +14,8 @@ public is_art
 public init
 public synlist, connect2target
 
+public axonnodes, paranodes1, paranodes2, axoninter, totalAxon, nDends
+
 public soma, node, MYSA, FLUT, STIN
 create soma, node[1], MYSA[1], FLUT[1], STIN[1]
 public proxdend, middend, distdend
@@ -350,7 +352,8 @@ proc initaxon() {
 		insert axnode70
 		insert extracellular xraxial=Rpn0 xg=1e10 xc=0
 	}
-    node[axonnodes-1] { //Last node has some differences to avoid edge effects 
+    
+	node[axonnodes-1] { //Last node has some differences to avoid edge effects 
 		uninsert axnode70
 		insert pas
 	}

@@ -10,8 +10,8 @@ celsius = 35			// degC
 
 global_ra = 100		// not really sure what this is
 RA = 100			// ohm-cm - constant for whole cell
-CM = 1.7				// uF-cm2 - constant for whole cell
-G_PAS = 0.0005			// S/cm2
+CM = 1				// uF-cm2 - constant for whole cell
+G_PAS = 1.15e-5			// S/cm2
 E_PAS = -86        //mV - resting potential of downstate MSP (Nicola et al, 2000)
 
 G_NAF = 1.5		// soma only

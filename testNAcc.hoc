@@ -1,15 +1,32 @@
 load_file("nrngui.hoc")
 load_file("NAccCell.hoc")
 
-objref cell1
-cell1 = new NAccCell(14)
-access cell1.soma
+objref cell
+cell = new NAccCell(50)
+access cell.soma
+
+mu = 1
+
+forsec cell.allSecs{
+	if (ismembrane("caL")) {
+		for (x,0) {setpointer mu_caL(x), mu}
+	}
+	if (ismembrane("caL13")) {
+		for (x,0) {setpointer mu_caL13(x), mu}
+	}
+	if (ismembrane("kir")) {
+		for (x,0) {setpointer mu_kir(x), mu}
+	}
+}
 
 objref ic
 ic = new IClamp(0.5)
 
-ic.dur = 100
-ic.del = 100
-ic.amp = 0.1
+ic.dur = 40
+ic.del = 5
+ic.amp = 1.3
 
-tstop = 300
+tstop = 80
+
+load_file("testcell.ses")
+run()
