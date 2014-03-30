@@ -1,0 +1,180 @@
+// _run_me.hoc runs a current clamp experiment
+// "play_netstims" activates synaptic input - the current clamp will be turned
+//    - ampa, gaba, and nmda weight can be changed in the panel
+
+//****************************************************************************
+// create cells
+load_file("nrngui.hoc")
+load_file("NAccCell.hoc")
+
+create acell_home_
+
+load_file("netstims_template.hoc")
+
+objref cells, nclist, netcon
+{cells = new List()  nclist = new List()}
+
+func cell_append() {cells.append($o1)
+	return cells.count - 1
+}
+
+func nc_append() {//srcindex, target cell index, synindex
+  if ($3 >= 0) {
+    cells.object($1).connect2target(cells.object($2).synlist.object($3),netcon)
+    netcon.weight = $4   netcon.delay = $5
+  }else{
+    cells.object($1).connect2target(cells.object($2).pp,netcon)
+    netcon.weight = $4   netcon.delay = $5
+  }
+  nclist.append(netcon)
+  return nclist.count - 1
+}
+acell_home_ L=0
+cell_number = 1
+cell_append(new NAccCell(50))
+
+objref curcell
+mu = 1
+for i = 0,cells.count-1 {
+	curcell = cells.o(i)
+	forsec curcell.allSecs{
+		if (ismembrane("caL")) {
+			for (x,0) {setpointer mu_caL(x), mu}
+		}
+		if (ismembrane("caL13")) {
+			for (x,0) {setpointer mu_caL13(x), mu}
+		}
+		if (ismembrane("kir")) {
+			for (x,0) {setpointer mu_kir(x), mu}
+		}
+	}
+}
+
+//******************
+// synaptic gbar procs
+proc gampa() {	NEW = $1		// AMPA conductance
+	nG_AMPA = NEW
+	for j = 0, NGLU-1 {AMPA[j].gbar = NEW}
+}
+
+proc gnmda() {	NEW = $1		// NMDA conductance
+	nG_NMDA = NEW
+	for j = 0, NGLU-1 {NMDA[j].gbar = NEW}
+}
+
+proc ggaba() {	NEW = $1		// GABA conductance
+	nG_GABA = NEW
+	for j = 0, NGABA-1 {GABA[j].gbar = nG_GABA}
+}
+//******************
+
+
+
+
+//******************
+// netstim variables
+proc tstart() {		NEW = $1	// time of netstims to start spiking
+	nT_START = NEW
+	for i = 0, NSYN-1 {NS_NetStim[i].pp.start = NEW}
+}
+
+proc setnetn() {	NEW = $1	// number of times a netstim will spike
+	nNET_N = NEW
+	for i = 0, NSYN-1 { NS_NetStim[i].pp.number = nNET_N }
+}
+
+proc setnoise() { NEW = $1		// netstim noise - 1 = random, 0 = not
+	nNOISE = NEW
+	for i = 0, NSYN-1 { NS_NetStim[i].pp.noise = nNOISE }
+}
+//******************
+
+load_file("make_netstims.hoc")
+
+//****************************************************************************
+
+
+
+
+//****************************************************************************
+
+NSYN = 168
+maxcol = 21
+
+strdef input_file
+objref stimx, stimxout
+
+stimx = new Matrix(NSYN, maxcol)
+sprint(input_file,"./stimxout_jns_sqwave.dat")		// input file with 
+													// synaptic input times
+
+proc play_stimx() {							// turns on synaptic inputs
+	stimxout = new File()
+	stimxout.ropen(input_file)				// read in input times
+	stimx.scanf(stimxout,NSYN,maxcol-1)
+	stimxout.close()
+
+
+	for cntrw = 0, NSYN-1 {					// assign spike times to synapses
+		cntcl = 0
+		while (stimx.x[cntrw][cntcl] > 0) {
+			ConnectFAKE_[cntrw].event(stimx.x[cntrw][cntcl])
+			cntcl = cntcl + 1
+		}
+	}
+}
+
+
+proc init() {
+	finitialize(v_init)
+
+	// play synaptic input
+	if (playstim == 1) {
+		setnetn(0)
+		play_stimx()
+		recordstim = 0
+		IClamp[0].amp = 0
+		tstop = 2000
+	} else { setnetn(1e7) }
+	
+	frecord_init()
+
+	if (cvode.active()) {
+		cvode.re_init()
+	} else {
+		fcurrent()
+	}
+}
+
+//****************************************************************************
+
+
+
+// intialize some variables
+cvode.active(1)
+dt = 0.025
+IClamp[0].amp = 0.2481		// 0.271
+tstop = 800	
+playstim = 0
+
+
+
+
+//****************************************************************************
+// Define the user interface
+xpanel("cell settings")
+xvalue("ampa weight","nAMPA_WT", 1,"champawt(nAMPA_WT)", 1, 1 )
+xvalue("nmda weight","nNMDA_WT", 1,"chnmdawt(nNMDA_WT)", 1, 1 )
+xvalue("gaba weight","nGABA_WT", 1,"chgabawt(nGABA_WT)", 1, 1 )
+xlabel("--------------------")
+xstatebutton("play netstims",&playstim, "init()")
+xlabel("--------------------")
+xpanel(1162,22)
+
+
+
+
+run()
+
+
+

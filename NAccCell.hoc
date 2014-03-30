@@ -2,6 +2,7 @@ load_file("baseline_values.txt")
 // all_tau_vecs.hoc loads the tables used to define the taus for many channels
 load_file("all_tau_vecs.hoc")
 load_file("synapse_templates.hoc")
+v_init = E_PAS
 
 begintemplate NAccCell
 external RA,CM, G_PAS,E_PAS, G_NAF,G_NAFD,G_NAP,G_NAPD

@@ -1,0 +1,23 @@
+begintemplate NAccCell
+public soma, dend, node
+create soma, dend[4], node[30]
+
+proc init() { //$1 = cell number
+	//Specify 3D points and connect sections
+	topol()
+	
+	//Add biophysics
+	initsoma()
+	initdends()
+	initaxon()
+}
+
+proc topol() {
+	curline = ""
+	while(strcmp(curline,"//beginpoints\n") != 0) {fid.gets(curline)}
+	while(fid.gets(curline) != -1) {
+		//get the segment name and array index
+		segn = -1
+		sscanf(curline,"%[^[{][%d]",seg,&segn)
+//...
+

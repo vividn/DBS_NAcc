@@ -20,7 +20,7 @@ proc champawt() {    nAMPA_WT = $1
     
     	for j = 0, NGLU-1 {
            	k = j*cell_number + i
-			ConnectAMPA_[k] = new NetCon( NS_NetStim[k].pp, MSP_Cell[i].synlist.object[j].pp, 0, 0, nAMPA_WT) 
+			ConnectAMPA_[k] = new NetCon( NS_NetStim[k].pp, NAccCell[i].synlist.object[j].pp, 0, 0, nAMPA_WT) 
         }
     }
  }
@@ -32,7 +32,7 @@ proc chnmdawt() {    nNMDA_WT = $1
 
     	for j = 0, NGLU-1 {
             k = j*cell_number + i
-	        ConnectNMDA_[k] = new NetCon( NS_NetStim[k].pp, MSP_Cell[i].synlist.object[j+NGLU].pp, 0, 0, nNMDA_WT) 
+	        ConnectNMDA_[k] = new NetCon( NS_NetStim[k].pp, NAccCell[i].synlist.object[j+NGLU].pp, 0, 0, nNMDA_WT) 
         }
     }
 }
@@ -44,7 +44,7 @@ proc chgabawt() {    nGABA_WT = $1
 
         for j = 0, NGABA-1  {
             k = j*cell_number + i
-            ConnectGABA_[k] = new NetCon( NS_NetStim[k+NGABA*cell_number].pp, MSP_Cell[i].synlist.object[j+2*NGLU].pp, 0, 0, nGABA_WT) 
+            ConnectGABA_[k] = new NetCon( NS_NetStim[k+NGABA*cell_number].pp, NAccCell[i].synlist.object[j+2*NGLU].pp, 0, 0, nGABA_WT) 
         }
     }
 }
