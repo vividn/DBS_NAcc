@@ -1,6 +1,10 @@
 load_file("nrngui.hoc")
 load_file("NAccCell.hoc")
 
+objref outfile
+outfile = new File()
+outfile.wopen("Figures/DA/DA.dat")
+
 //create 1 cell
 objref cell
 cell = new NAccCell(50)
@@ -27,8 +31,8 @@ objref g  // for plotting current vs. v
 
 proc newgraph() {
   g = new Graph(0)
-  g.size(0,500,-90,-30)
-  g.view(0, -90, 500, 60, 399, 105, 300.48, 255.04)
+  g.size(0,300,-90,-50)
+  g.view(0, -90, 300, 40, 399, 105, 300.48, 255.04)
   g.label(0.4, 0.9, $s1)
 }
 
@@ -69,7 +73,7 @@ vvecs = new List()
 proc sweep() { local record_v, tally, i_ionic
   tempvec = new Vector()
   if (vvec.size() == 0) record_v = 1
-  for V = -90,-30 {
+  for V = -90,-55 {
     if (record_v) vvec.append(V)
     finitialize(V)
     fcurrent()
@@ -80,6 +84,7 @@ proc sweep() { local record_v, tally, i_ionic
   vvecs.append(vvec.c)
   // plot gs vs. v
   vvecs.object(tally-1).plot(g, gsvecs.object(tally-1), $1, 2)
+  gsvecs.o(tally-1).printf(outfile,"%6.2f\t")
 }
 
 
@@ -94,6 +99,8 @@ proc batchrun() { local ii
     mu = 1 + ii*0.1
     sweep(color.x[ii])
   }
+  
 }
 
 batchrun("Fig. 4")
+outfile.close()

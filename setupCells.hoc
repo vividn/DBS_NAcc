@@ -1,0 +1,4 @@
+// Set up cells. This file loads everything needed to run experiments on the nucleus accumbens
+
+load_file("nrngui.hoc")
+load_file("NAccCell.hoc")

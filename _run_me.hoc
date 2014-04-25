@@ -8,6 +8,7 @@ load_file("nrngui.hoc")
 load_file("NAccCell.hoc")
 
 create acell_home_
+acell_home_ L = 0
 
 load_file("netstims_template.hoc")
 
@@ -29,7 +30,6 @@ func nc_append() {//srcindex, target cell index, synindex
   nclist.append(netcon)
   return nclist.count - 1
 }
-acell_home_ L=0
 cell_number = 1
 cell_append(new NAccCell(50))
 
@@ -49,12 +49,12 @@ for i = 0,cells.count-1 {
 		}
 	}
 }
-
+access curcell.soma
 objref ic
 curcell.soma ic = new IClamp(0.5)
 
-ic.dur = 40
-ic.del = 5
+ic.dur = 100
+ic.del = 50
 ic.amp = 0.2481
 
 tstop = 800
@@ -76,8 +76,6 @@ proc ggaba() {	NEW = $1		// GABA conductance
 	for j = 0, NGABA-1 {GABA[j].gbar = nG_GABA}
 }
 //******************
-
-
 
 
 //******************
@@ -164,7 +162,8 @@ cvode.active(1)
 dt = 0.025
 IClamp[0].amp = 0.2481		// 0.271
 tstop = 800	
-playstim = 0
+playstim = 1
+init()
 
 
 
@@ -175,15 +174,4 @@ xpanel("cell settings")
 xvalue("ampa weight","nAMPA_WT", 1,"champawt(nAMPA_WT)", 1, 1 )
 xvalue("nmda weight","nNMDA_WT", 1,"chnmdawt(nNMDA_WT)", 1, 1 )
 xvalue("gaba weight","nGABA_WT", 1,"chgabawt(nGABA_WT)", 1, 1 )
-xlabel("--------------------")
-xstatebutton("play netstims",&playstim, "init()")
-xlabel("--------------------")
 xpanel(1162,22)
-
-
-
-
-run()
-
-
-
